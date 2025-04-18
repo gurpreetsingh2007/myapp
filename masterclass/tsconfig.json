@@ -8,10 +8,19 @@
       "path": "./tsconfig.app.json"
     },
     {
-      "path": "./tsconfig.vitest.json"
+      "path": "./tsconfig.cypress-ct.json"
     }
   ],
+  "include": [
+    // other files...
+    "./typed-router.d.ts"
+  ],
   "compilerOptions": {
-    "module": "NodeNext"
+    "forceConsistentCasingInFileNames": true,
+    "module": "NodeNext",
+    "declaration": true,
+    "declarationDir": "./types", // where to put the .d.ts files
+    "emitDeclarationOnly": true,
+    "strict": true,
   }
 }

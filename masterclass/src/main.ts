@@ -1,18 +1,77 @@
 import './assets/main.css'
 
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import { createPinia, storeToRefs } from 'pinia'
 
 import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
+import { API } from '@/config/index'
+import { useAuthStore } from '@/stores/auth.ts'
+
+const app = createApp(App)
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
 })
-const app = createApp(App)
 
+const protectedRoutes = [
+  '/dashboard',
+  '/dashboard/dashboard',
+  '/dashboard/profile',
+  '/dashboard/settings',
+]
+
+for (const route of router.getRoutes()) {
+  if (protectedRoutes.includes(route.path)) {
+    route.meta.requiresAuth = true
+  }
+}
+router.beforeEach(async (to, from, next) => {
+  //console.log('Route guard triggered')
+
+  const auth = useAuthStore()
+  const { token } = storeToRefs(auth)
+
+  // If route doesn't require auth, allow navigation
+  if (!to.meta.requiresAuth) {
+    //console.log('Does not require login')
+    return next()
+  }
+
+  // If no token in store, redirect to login
+  if (!token.value) {
+    console.log('No token in store')
+    return to.path === '/' ? next(false) : next('/')
+  }
+
+  try {
+    const res = await fetch(`${API}/credentials/logincheack`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ csrf_token: token.value }),
+    })
+
+    const data = await res.json()
+
+    if (true) {
+      //console.log('Token valid')
+      next()
+    } else {
+      console.warn('Token invalid:', data.message)
+      auth.clearToken()
+      return to.path === '/' ? next(false) : next('/')
+    }
+  } catch (err) {
+    auth.clearToken()
+    console.error('Session check failed:', err)
+    return to.path === '/' ? next(false) : next('/')
+  }
+})
 app.use(createPinia())
 app.use(router)
 

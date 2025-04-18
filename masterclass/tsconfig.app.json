@@ -1,11 +1,14 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "typed-router.d.ts"],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
-    "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "moduleResolution": "bundler",
+    "declaration": true,
+    "declarationDir": "./types", // where to put the .d.ts files
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "composite": true,
     "paths": {
       "@/*": ["./src/*"]
     }

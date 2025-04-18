@@ -15,7 +15,7 @@
       "name": "Launch Microsoft Edge in headless mode",
       "request": "launch",
       "runtimeArgs": ["--headless", "--remote-debugging-port=9222"],
-      "url": "localhost:5173", // Provide your project's url to finish configuring
+      "url": "localhost:4173", // Provide your project's url to finish configuring
       "presentation": {
         "hidden": true
       }
@@ -24,7 +24,7 @@
       "type": "vscode-edge-devtools.debug",
       "name": "Open Edge DevTools",
       "request": "attach",
-      "url": "localhost:5173", // Provide your project's url to finish configuring
+      "url": "localhost:4173", // Provide your project's url to finish configuring
       "presentation": {
         "hidden": true
       }

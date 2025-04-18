@@ -1,85 +1,48 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+<script lang="ts" setup>
+import { useAuthStore } from '@/stores/auth.ts'
+import { storeToRefs } from 'pinia'
+import { useRoute } from 'vue-router'
+import Sidebar from '@/components/sidebar.vue'
+import { onMounted, onBeforeUnmount } from 'vue'
+
+const route = useRoute()
+const authStore = useAuthStore()
+const { token } = storeToRefs(authStore)
+
+onMounted(() => {
+  //window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+  //window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+function handleBeforeUnload(event: BeforeUnloadEvent) {
+  authStore.clearToken()
+  event.preventDefault()
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="header" id="App">
+    <!-- Show sidebar only if user is authenticated and not on login page -->
+    <nav v-if="token && route.path !== '/'">
+      <div><Sidebar /></div>
+    </nav>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/AboutView">About</RouterLink>
-      </nav>
-    </div>
-  </header>
-
-  <RouterView />
+    <Transition name="fade" mode="out-in">
+      <RouterView />
+    </Transition>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
 }
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
