@@ -98,6 +98,8 @@ import { useRouter } from 'vue-router'
 import forge from 'node-forge'
 import { API } from '@/config/index'
 import { useAuthStore } from '@/stores/auth.ts'
+import { useUserStore } from '@/stores/user'
+const userStore = useUserStore()
 
 const authStore = useAuthStore()
 const username = ref('')
@@ -117,7 +119,13 @@ const clearError = () => {
 // 🔘 Fetch public key on mount
 onMounted(async () => {
   try {
-    const response = await fetch(`${API}/keys/PublicKey`)
+    const response = await fetch(`${API}/keys/PublicKey`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json', // If you're using any tokens
+      },
+      credentials: 'include',
+    })
     if (!response.ok) {
       throw new Error(`PublicKey error: ${response.status}`)
     }
@@ -172,6 +180,7 @@ const handleLogin = async () => {
     if (data.success) {
       //console.log(sessionStorage.getItem('csrf_token'))
       authStore.setToken(data.csrf_token)
+      userStore.setUser(data.username, username.value)
       router.push('/dashboard')
     } else {
       loginError.value = true

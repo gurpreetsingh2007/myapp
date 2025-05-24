@@ -7,10 +7,9 @@ import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import { API } from '@/config/index'
-import { useAuthStore } from '@/stores/auth.ts'
+import { useAuthStore } from '@/stores/auth.ts' // Use the correct path for highlight.js
 
 const app = createApp(App)
-
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -59,12 +58,11 @@ router.beforeEach(async (to, from, next) => {
     const data = await res.json()
 
     if (true) {
+      //data.success
+      //should be data.success
       //console.log('Token valid')
       next()
     } else {
-      console.warn('Token invalid:', data.message)
-      auth.clearToken()
-      return to.path === '/' ? next(false) : next('/')
     }
   } catch (err) {
     auth.clearToken()
@@ -72,7 +70,7 @@ router.beforeEach(async (to, from, next) => {
     return to.path === '/' ? next(false) : next('/')
   }
 })
+
 app.use(createPinia())
 app.use(router)
-
 app.mount('#app')

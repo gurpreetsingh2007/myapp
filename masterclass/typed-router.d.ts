@@ -21,7 +21,11 @@ declare module 'vue-router/auto-routes' {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...catchAll]': RouteRecordInfo<'/[...catchAll]', '/:catchAll(.*)', { catchAll: ParamValue<true> }, { catchAll: ParamValue<false> }>,
     '/dashboard/': RouteRecordInfo<'/dashboard/', '/dashboard', Record<never, never>, Record<never, never>>,
+    '/dashboard/config': RouteRecordInfo<'/dashboard/config', '/dashboard/config', Record<never, never>, Record<never, never>>,
     '/dashboard/dashboard/': RouteRecordInfo<'/dashboard/dashboard/', '/dashboard/dashboard', Record<never, never>, Record<never, never>>,
+    '/dashboard/Nginx': RouteRecordInfo<'/dashboard/Nginx', '/dashboard/Nginx', Record<never, never>, Record<never, never>>,
+    '/dashboard/profile': RouteRecordInfo<'/dashboard/profile', '/dashboard/profile', Record<never, never>, Record<never, never>>,
     '/dashboard/profile/': RouteRecordInfo<'/dashboard/profile/', '/dashboard/profile', Record<never, never>, Record<never, never>>,
+    '/dashboard/servers': RouteRecordInfo<'/dashboard/servers', '/dashboard/servers', Record<never, never>, Record<never, never>>,
   }
 }

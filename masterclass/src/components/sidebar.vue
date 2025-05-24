@@ -1,12 +1,19 @@
 <template>
-  <div>
+  <div class="sidebar-container">
     <!-- Toggle Button -->
     <button
       @click="toggleSidebar"
-      class="sidebar-toggle fixed top-6 z-[1001] p-2.5 rounded-lg bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] transition-all hover:bg-[rgba(0,240,255,0.15)] hover:-translate-y-0.5 duration-300 ease-in-out"
+      id="togleswitch"
+      class="sidebar-toggle fixed top-4 z-[9999] p-2.5 rounded-lg bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[rgba(0,240,255,0.15)] hover:-translate-y-0.5 hover:scale-110 shadow-lg hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]"
       :class="isOpen ? 'left-55' : 'left-7'"
     >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        class="w-6 h-6 transform transition-transform duration-300"
+        :class="{ 'rotate-90': isOpen }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           stroke-linecap="round"
           stroke-linejoin="round"
@@ -17,56 +24,152 @@
     </button>
 
     <!-- Backdrop -->
-    <div
-      v-if="isOpen"
-      @click="toggleSidebar"
-      class="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm md:hidden"
-    ></div>
+    <Transition name="fade">
+      <div
+        v-if="isOpen"
+        @click="toggleSidebar"
+        class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
+      ></div>
+    </Transition>
 
     <!-- Sidebar -->
     <aside
-      class="sidebar fixed left-0 top-0 h-screen w-20 bg-[var(--bg-color)] border-r border-[rgba(0,240,255,0.1)] transition-all duration-300 z-[1000] overflow-x-hidden"
-      :class="{ open: isOpen, 'w-64 shadow-xl': isOpen }"
+      class="sidebar h-screen bg-gradient-to-b from-[var(--bg-color)] to-[rgba(0,0,0,0.95)] border-r border-[rgba(0,240,255,0.1)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 overflow-x-hidden shadow-2xl shadow-[rgba(0,240,255,0.05)]"
+      :class="{ 'sidebar-open': isOpen, 'sidebar-closed': !isOpen }"
     >
+      <!-- Header -->
       <div
-        class="sidebar-header px-6 py-5 border-b border-[rgba(0,240,255,0.08)] h-16 flex items-center"
+        class="sidebar-header px-6 py-5 border-b border-[rgba(0,240,255,0.08)] h-16 flex items-center relative overflow-hidden"
       >
-        <h2 v-show="isOpen" class="text-xl font-semibold text-[var(--text-color)] tracking-tight">
-          <span class="bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
-            >GURPREET SINGH</span
-          >
-        </h2>
+        <div class="absolute inset-0 bg-[rgba(0,240,255,0.02)] animate-pulse-slow"></div>
+        <Transition name="slide-fade">
+          <h2 v-if="isOpen" class="text-xl font-semibold text-[var(--text-color)] tracking-tight">
+            <span
+              class="bg-gradient-to-r from-[#00f0ff] via-[#a200ff] to-[#d000ff] bg-clip-text text-transparent animate-gradient-shift bg-300%"
+            >
+              GURPREET SINGH
+            </span>
+          </h2>
+        </Transition>
       </div>
 
-      <nav class="sidebar-menu mt-6">
-        <ul class="px-2 flex flex-col gap-3">
+      <!-- Navigation Menu -->
+      <nav class="sidebar-menu mt-6 relative">
+        <ul class="px-2 flex flex-col gap-2">
           <li
             v-for="(item, index) in menuItems"
             :key="index"
             class="group relative cursor-pointer transition-all duration-200"
           >
-            <RouterLink
-              :to="item.path"
-              class="flex items-center rounded-md px-4 py-4 transition-all duration-200 hover:bg-[rgba(0,240,255,0.05)] hover:translate-x-1"
+            <div
+              class="flex items-center rounded-md px-4 py-4 transition-all duration-300 ease-out hover:bg-[rgba(0,240,255,0.05)] hover:translate-x-2 hover:shadow-[inset_0_0_15px_rgba(0,240,255,0.1)]"
               :class="[
                 item.active
                   ? 'bg-gradient-to-r from-[rgba(0,240,255,0.1)] to-[rgba(208,0,255,0.1)] border-l-4 border-[#00f0ff]'
                   : '',
-                isOpen ? 'justify-start gap-3' : 'justify-center',
+                isOpen ? 'justify-start gap-6' : 'justify-center',
               ]"
+              @click="item.isDropdown ? (item.open = !item.open) : router.push(item.path)"
             >
               <component
-                :is="iconMap[item.icon as IconKey]"
-                class="w-6 h-6 transition-all"
-                :class="item.active ? 'text-[#d000ff]' : 'text-[#00f0ff]'"
+                :is="iconMap[item.icon as keyof typeof iconMap]"
+                class="w-6 h-10 transition-all transform hover:scale-125 hover:rotate-12"
+                :class="[
+                  item.active ? 'text-[#d000ff]' : 'text-[#00f0ff]',
+                  item.open ? 'animate-pulse' : '',
+                ]"
               />
-              <span
-                v-if="isOpen"
-                class="text-sm font-medium text-[var(--text-color)] transition-opacity duration-300 opacity-100"
+              <Transition name="slide-fade">
+                <span v-if="isOpen" class="text-sm font-medium text-[var(--text-color)]">
+                  {{ item.title }}
+                </span>
+              </Transition>
+              <svg
+                v-if="item.isDropdown && isOpen"
+                class="ml-auto w-4 h-4 transition-transform duration-500"
+                :class="{ 'rotate-90 text-[#d000ff]': item.open }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {{ item.title }}
-              </span>
-            </RouterLink>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+
+            <!-- Dropdown Transition -->
+            <Transition
+              name="dropdown"
+              enter-active-class="dropdown-enter-active"
+              leave-active-class="dropdown-leave-active"
+            >
+              <ul
+                v-if="item.isDropdown && item.open"
+                class="ml-2 mt-1 relative space-y-3 overflow-hidden"
+                :class="{ 'pl-2': isOpen, 'px-1': !isOpen }"
+              >
+                <li
+                  v-for="(child, cIndex) in item.children"
+                  :key="cIndex"
+                  class="flex items-center rounded-md transition-all group origin-left"
+                  :class="{
+                    'px-3 py-2.5': isOpen,
+                    'px-2 py-2 justify-center': !isOpen,
+                    'bg-[rgba(0,240,255,0.05)]': route.path === child.path,
+                  }"
+                >
+                  <RouterLink
+                    :to="child.path"
+                    class="w-full flex items-center gap-3 relative"
+                    :class="{ 'flex-col text-center': !isOpen, 'flex-row': isOpen }"
+                  >
+                    <component
+                      :is="iconMap[child.icon as IconKey]"
+                      class="w-5 h-7 flex-shrink-0 transition-all duration-300"
+                      :class="{
+                        'text-[#d000ff] scale-125': route.path === child.path,
+                        'text-[#00f0ff] group-hover:scale-110': route.path !== child.path,
+                      }"
+                    />
+                    <Transition name="slide-fade">
+                      <span
+                        v-if="isOpen"
+                        class="text-sm text-[var(--text-color)] relative inline-block overflow-hidden"
+                      >
+                        <span class="inline-block">
+                          {{ child.title }}
+                          <span
+                            class="absolute bottom-0 left-0 w-full h-px transition-all duration-500 origin-left"
+                            :class="{
+                              'bg-[#d000ff] scale-x-100': route.path === child.path,
+                              'bg-[#00f0ff] scale-x-0 group-hover:scale-x-100':
+                                route.path !== child.path,
+                            }"
+                          >
+                            <span
+                              class="absolute inset-0 bg-current transition-all duration-1000 opacity-50 group-hover:animate-underline-pulse"
+                            ></span>
+                          </span>
+                        </span>
+                      </span>
+                    </Transition>
+                    <span
+                      v-if="!isOpen"
+                      class="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 text-sm bg-[rgba(0,0,0,0.9)] text-[var(--text-color)] rounded-md shadow-xl border border-[rgba(0,240,255,0.2)] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap origin-left scale-75 group-hover:scale-100 backdrop-blur-sm"
+                    >
+                      {{ child.title }}
+                      <span
+                        class="absolute -left-px top-1/2 -translate-y-1/2 w-1 h-3/5 bg-[#00f0ff] rounded-full opacity-50 animate-pulse"
+                      ></span>
+                    </span>
+                  </RouterLink>
+                </li>
+              </ul>
+            </Transition>
           </li>
         </ul>
       </nav>
@@ -75,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch } from 'vue'
+import { ref, reactive, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   HomeIcon,
@@ -83,67 +186,261 @@ import {
   EnvelopeIcon,
   Cog6ToothIcon,
   ChartBarIcon,
+  ServerIcon,
 } from '@heroicons/vue/24/outline'
+import { Terminal, Code, Database } from 'lucide-vue-next'
+import { useSidebarStore } from '@/stores/sidebar'
+import { storeToRefs } from 'pinia'
+const sidebarState = useSidebarStore()
+const { isOpen } = storeToRefs(sidebarState)
 
 const router = useRouter()
 const route = useRoute()
+const windowWidth = ref(window.innerWidth)
+// Reactive media query detection
 
+// Update window width on resize
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
+// iconMap with strict keys
 const iconMap = {
   dashboard: HomeIcon,
   profile: UserIcon,
   messages: EnvelopeIcon,
   settings: Cog6ToothIcon,
   analytics: ChartBarIcon,
+  servers: ServerIcon,
+  nginx: Terminal,
+  php: Code,
+  MariDb: Database,
 } as const
 
-const isOpen = ref(false)
+type IconKey = keyof typeof iconMap
 
-const menuItems = reactive([
-  { title: 'Dashboard', icon: 'dashboard', path: '/dashboard/dashboard', active: false },
+type MenuItem = {
+  title: string
+  icon: IconKey
+  path: string
+  active: boolean
+  isDropdown?: boolean
+  open?: boolean
+  children?: MenuItem[]
+}
+
+const menuItems = reactive<MenuItem[]>([
+  { title: 'Dashboard', icon: 'dashboard', path: '/dashboard', active: true },
   { title: 'Profile', icon: 'profile', path: '/dashboard/profile', active: false },
   { title: 'Messages', icon: 'messages', path: '/dashboard/messages', active: false },
   { title: 'Settings', icon: 'settings', path: '/dashboard/settings', active: false },
   { title: 'Analytics', icon: 'analytics', path: '/dashboard/analytics', active: false },
+  {
+    title: 'Services',
+    icon: 'servers',
+    path: '/dashboard/servers',
+    active: false,
+    isDropdown: true,
+    open: false,
+    children: [
+      { title: 'NGINX', path: '/dashboard/nginx', icon: 'nginx', active: false },
+      { title: 'PHP-FPM', path: '/dashboard/phpfpm', icon: 'php', active: false },
+      { title: 'MariDb', path: '/dashboard/MariDb', icon: 'MariDb', active: false },
+    ],
+  },
 ])
-type IconKey = keyof typeof iconMap
 
 // Set active route on load and on change
 watch(
   () => route.path,
   (path) => {
-    menuItems.forEach((item) => (item.active = item.path === path))
+    menuItems.forEach((item) => {
+      if (item.children) {
+        item.active = item.children.some((child) => child.path === path)
+        item.open = item.active // auto-expand on match
+      } else {
+        item.active = item.path === path
+      }
+    })
   },
   { immediate: true },
 )
 
 const toggleSidebar = () => {
-  isOpen.value = !isOpen.value
+  sidebarState.toggle()
 }
 </script>
-
 <style scoped>
-.sidebar {
-  background: var(--bg-color);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1000;
-  overflow-x: hidden;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Base Styles */
+.sidebar-container {
+  height: 100%;
 }
 
-.sidebar.open {
+.sidebar {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-open {
   width: 260px;
 }
 
-.sidebar-toggle {
-  transition: all 0.2s ease;
+.sidebar-closed {
+  width: 80px;
 }
 
-.sidebar-toggle:hover {
-  background: rgba(0, 240, 255, 0.15);
-  transform: translateY(-1px);
+/* Animation Keyframes */
+@keyframes underline-pulse {
+  0% {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(100%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
-.sidebar-menu li.active {
-  font-weight: 600;
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes submenu-bounce {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(5px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Transition Effects */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.dropdown-enter-active {
+  transition:
+    opacity 0.3s ease-out,
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-leave-active {
+  transition:
+    opacity 0.3s ease-in,
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+.dropdown-enter-to,
+.dropdown-leave-from {
+  opacity: 1;
+  max-height: 500px;
+}
+
+/* Animation Utilities */
+.animate-underline-pulse {
+  animation: underline-pulse 1.2s ease-out infinite;
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 6s ease infinite;
+  background-size: 300% 300%;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    width: 260px !important;
+    transform: translateX(-100%);
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s ease;
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+  }
+
+  .sidebar.sidebar-closed {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-toggle {
+    left: 0.5rem !important;
+  }
+
+  .sidebar-toggle.left-55 {
+    left: 13.5rem !important;
+  }
 }
 </style>

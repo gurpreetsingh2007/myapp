@@ -1,0 +1,928 @@
+{
+  "status": "ok",
+  "errors": [],
+  "config": [
+    {
+      "file": "nginx.conf",
+      "status": "ok",
+      "errors": [],
+      "parsed": [
+        { "directive": "user", "line": 1, "args": ["www-data"] },
+        { "directive": "worker_processes", "line": 2, "args": ["auto"] },
+        { "directive": "pid", "line": 3, "args": ["/run/nginx.pid"] },
+        { "directive": "error_log", "line": 4, "args": ["/var/log/nginx/error.log"] },
+        {
+          "directive": "include",
+          "line": 5,
+          "args": ["/etc/nginx/modules-enabled/*.conf"],
+          "includes": []
+        },
+        {
+          "directive": "events",
+          "line": 6,
+          "args": [],
+          "block": [{ "directive": "worker_connections", "line": 7, "args": ["768"] }]
+        },
+        {
+          "directive": "http",
+          "line": 11,
+          "args": [],
+          "block": [
+            { "directive": "sendfile", "line": 19, "args": ["on"] },
+            { "directive": "tcp_nopush", "line": 20, "args": ["on"] },
+            { "directive": "types_hash_max_size", "line": 21, "args": ["2048"] },
+            {
+              "directive": "include",
+              "line": 27,
+              "args": ["/etc/nginx/mime.types"],
+              "includes": [1]
+            },
+            { "directive": "default_type", "line": 28, "args": ["application/octet-stream"] },
+            {
+              "directive": "ssl_protocols",
+              "line": 34,
+              "args": ["TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"]
+            },
+            { "directive": "ssl_prefer_server_ciphers", "line": 35, "args": ["on"] },
+            { "directive": "access_log", "line": 41, "args": ["/var/log/nginx/access.log"] },
+            { "directive": "gzip", "line": 47, "args": ["on"] },
+            {
+              "directive": "gzip_types",
+              "line": 48,
+              "args": [
+                "text/plain",
+                "text/css",
+                "application/json",
+                "application/javascript",
+                "text/xml",
+                "application/xml",
+                "application/xml+rss",
+                "text/javascript"
+              ]
+            },
+            { "directive": "gzip_min_length", "line": 49, "args": ["256"] },
+            {
+              "directive": "include",
+              "line": 61,
+              "args": ["/etc/nginx/conf.d/*.conf"],
+              "includes": []
+            },
+            {
+              "directive": "include",
+              "line": 62,
+              "args": ["/etc/nginx/sites-enabled/*"],
+              "includes": [2, 3]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "/etc/nginx/mime.types",
+      "status": "ok",
+      "errors": [],
+      "parsed": [
+        {
+          "directive": "types",
+          "line": 2,
+          "args": [],
+          "block": [
+            { "directive": "text/html", "line": 3, "args": ["html", "htm", "shtml"] },
+            { "directive": "text/css", "line": 4, "args": ["css"] },
+            { "directive": "text/xml", "line": 5, "args": ["xml"] },
+            { "directive": "image/gif", "line": 6, "args": ["gif"] },
+            { "directive": "image/jpeg", "line": 7, "args": ["jpeg", "jpg"] },
+            { "directive": "application/javascript", "line": 8, "args": ["js"] },
+            { "directive": "application/atom+xml", "line": 9, "args": ["atom"] },
+            { "directive": "application/rss+xml", "line": 10, "args": ["rss"] },
+            { "directive": "text/mathml", "line": 12, "args": ["mml"] },
+            { "directive": "text/plain", "line": 13, "args": ["txt"] },
+            { "directive": "text/vnd.sun.j2me.app-descriptor", "line": 14, "args": ["jad"] },
+            { "directive": "text/vnd.wap.wml", "line": 15, "args": ["wml"] },
+            { "directive": "text/x-component", "line": 16, "args": ["htc"] },
+            { "directive": "image/avif", "line": 18, "args": ["avif"] },
+            { "directive": "image/png", "line": 19, "args": ["png"] },
+            { "directive": "image/svg+xml", "line": 20, "args": ["svg", "svgz"] },
+            { "directive": "image/tiff", "line": 21, "args": ["tif", "tiff"] },
+            { "directive": "image/vnd.wap.wbmp", "line": 22, "args": ["wbmp"] },
+            { "directive": "image/webp", "line": 23, "args": ["webp"] },
+            { "directive": "image/x-icon", "line": 24, "args": ["ico"] },
+            { "directive": "image/x-jng", "line": 25, "args": ["jng"] },
+            { "directive": "image/x-ms-bmp", "line": 26, "args": ["bmp"] },
+            { "directive": "font/woff", "line": 28, "args": ["woff"] },
+            { "directive": "font/woff2", "line": 29, "args": ["woff2"] },
+            { "directive": "application/java-archive", "line": 31, "args": ["jar", "war", "ear"] },
+            { "directive": "application/json", "line": 32, "args": ["json"] },
+            { "directive": "application/mac-binhex40", "line": 33, "args": ["hqx"] },
+            { "directive": "application/msword", "line": 34, "args": ["doc"] },
+            { "directive": "application/pdf", "line": 35, "args": ["pdf"] },
+            { "directive": "application/postscript", "line": 36, "args": ["ps", "eps", "ai"] },
+            { "directive": "application/rtf", "line": 37, "args": ["rtf"] },
+            { "directive": "application/vnd.apple.mpegurl", "line": 38, "args": ["m3u8"] },
+            { "directive": "application/vnd.google-earth.kml+xml", "line": 39, "args": ["kml"] },
+            { "directive": "application/vnd.google-earth.kmz", "line": 40, "args": ["kmz"] },
+            { "directive": "application/vnd.ms-excel", "line": 41, "args": ["xls"] },
+            { "directive": "application/vnd.ms-fontobject", "line": 42, "args": ["eot"] },
+            { "directive": "application/vnd.ms-powerpoint", "line": 43, "args": ["ppt"] },
+            {
+              "directive": "application/vnd.oasis.opendocument.graphics",
+              "line": 44,
+              "args": ["odg"]
+            },
+            {
+              "directive": "application/vnd.oasis.opendocument.presentation",
+              "line": 45,
+              "args": ["odp"]
+            },
+            {
+              "directive": "application/vnd.oasis.opendocument.spreadsheet",
+              "line": 46,
+              "args": ["ods"]
+            },
+            { "directive": "application/vnd.oasis.opendocument.text", "line": 47, "args": ["odt"] },
+            {
+              "directive": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+              "line": 48,
+              "args": ["pptx"]
+            },
+            {
+              "directive": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              "line": 49,
+              "args": ["xlsx"]
+            },
+            {
+              "directive": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              "line": 50,
+              "args": ["docx"]
+            },
+            { "directive": "application/vnd.wap.wmlc", "line": 51, "args": ["wmlc"] },
+            { "directive": "application/wasm", "line": 52, "args": ["wasm"] },
+            { "directive": "application/x-7z-compressed", "line": 53, "args": ["7z"] },
+            { "directive": "application/x-cocoa", "line": 54, "args": ["cco"] },
+            { "directive": "application/x-java-archive-diff", "line": 55, "args": ["jardiff"] },
+            { "directive": "application/x-java-jnlp-file", "line": 56, "args": ["jnlp"] },
+            { "directive": "application/x-makeself", "line": 57, "args": ["run"] },
+            { "directive": "application/x-perl", "line": 58, "args": ["pl", "pm"] },
+            { "directive": "application/x-pilot", "line": 59, "args": ["prc", "pdb"] },
+            { "directive": "application/x-rar-compressed", "line": 60, "args": ["rar"] },
+            { "directive": "application/x-redhat-package-manager", "line": 61, "args": ["rpm"] },
+            { "directive": "application/x-sea", "line": 62, "args": ["sea"] },
+            { "directive": "application/x-shockwave-flash", "line": 63, "args": ["swf"] },
+            { "directive": "application/x-stuffit", "line": 64, "args": ["sit"] },
+            { "directive": "application/x-tcl", "line": 65, "args": ["tcl", "tk"] },
+            {
+              "directive": "application/x-x509-ca-cert",
+              "line": 66,
+              "args": ["der", "pem", "crt"]
+            },
+            { "directive": "application/x-xpinstall", "line": 67, "args": ["xpi"] },
+            { "directive": "application/xhtml+xml", "line": 68, "args": ["xhtml"] },
+            { "directive": "application/xspf+xml", "line": 69, "args": ["xspf"] },
+            { "directive": "application/zip", "line": 70, "args": ["zip"] },
+            { "directive": "application/octet-stream", "line": 72, "args": ["bin", "exe", "dll"] },
+            { "directive": "application/octet-stream", "line": 73, "args": ["deb"] },
+            { "directive": "application/octet-stream", "line": 74, "args": ["dmg"] },
+            { "directive": "application/octet-stream", "line": 75, "args": ["iso", "img"] },
+            { "directive": "application/octet-stream", "line": 76, "args": ["msi", "msp", "msm"] },
+            { "directive": "audio/midi", "line": 78, "args": ["mid", "midi", "kar"] },
+            { "directive": "audio/mpeg", "line": 79, "args": ["mp3"] },
+            { "directive": "audio/ogg", "line": 80, "args": ["ogg"] },
+            { "directive": "audio/x-m4a", "line": 81, "args": ["m4a"] },
+            { "directive": "audio/x-realaudio", "line": 82, "args": ["ra"] },
+            { "directive": "video/3gpp", "line": 84, "args": ["3gpp", "3gp"] },
+            { "directive": "video/mp2t", "line": 85, "args": ["ts"] },
+            { "directive": "video/mp4", "line": 86, "args": ["mp4"] },
+            { "directive": "video/mpeg", "line": 87, "args": ["mpeg", "mpg"] },
+            { "directive": "video/quicktime", "line": 88, "args": ["mov"] },
+            { "directive": "video/webm", "line": 89, "args": ["webm"] },
+            { "directive": "video/x-flv", "line": 90, "args": ["flv"] },
+            { "directive": "video/x-m4v", "line": 91, "args": ["m4v"] },
+            { "directive": "video/x-mng", "line": 92, "args": ["mng"] },
+            { "directive": "video/x-ms-asf", "line": 93, "args": ["asx", "asf"] },
+            { "directive": "video/x-ms-wmv", "line": 94, "args": ["wmv"] },
+            { "directive": "video/x-msvideo", "line": 95, "args": ["avi"] }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "/etc/nginx/sites-enabled/default",
+      "status": "ok",
+      "errors": [],
+      "parsed": [
+        {
+          "directive": "server",
+          "line": 21,
+          "args": [],
+          "block": [
+            { "directive": "listen", "line": 22, "args": ["80", "default_server"] },
+            { "directive": "listen", "line": 23, "args": ["[::]:80", "default_server"] },
+            { "directive": "root", "line": 40, "args": ["/var/www/html"] },
+            {
+              "directive": "index",
+              "line": 43,
+              "args": ["index.html", "index.htm", "index.nginx-debian.html"]
+            },
+            { "directive": "server_name", "line": 45, "args": ["_"] },
+            {
+              "directive": "location",
+              "line": 47,
+              "args": ["/"],
+              "block": [{ "directive": "try_files", "line": 50, "args": ["$uri", "$uri/", "=404"] }]
+            }
+          ]
+        },
+        {
+          "directive": "server",
+          "line": 91,
+          "args": [],
+          "block": [
+            {
+              "directive": "listen",
+              "line": 92,
+              "args": ["443", "ssl", "http2", "default_server"]
+            },
+            {
+              "directive": "listen",
+              "line": 93,
+              "args": ["[::]:443", "ssl", "http2", "default_server"]
+            },
+            { "directive": "server_name", "line": 94, "args": ["_"] },
+            {
+              "directive": "ssl_certificate",
+              "line": 97,
+              "args": ["/etc/nginx/ssl/myapp.local.pem"]
+            },
+            {
+              "directive": "ssl_certificate_key",
+              "line": 98,
+              "args": ["/etc/nginx/ssl/myapp.local-key.pem"]
+            },
+            { "directive": "ssl_protocols", "line": 101, "args": ["TLSv1.2", "TLSv1.3"] },
+            {
+              "directive": "ssl_ciphers",
+              "line": 102,
+              "args": ["ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"]
+            },
+            { "directive": "ssl_prefer_server_ciphers", "line": 103, "args": ["on"] },
+            { "directive": "ssl_session_cache", "line": 104, "args": ["shared:SSL:10m"] },
+            { "directive": "ssl_session_timeout", "line": 105, "args": ["1d"] },
+            { "directive": "ssl_session_tickets", "line": 106, "args": ["off"] },
+            { "directive": "ssl_ecdh_curve", "line": 107, "args": ["secp384r1"] },
+            {
+              "directive": "add_header",
+              "line": 110,
+              "args": ["Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload"]
+            },
+            { "directive": "add_header", "line": 111, "args": ["X-Frame-Options", "DENY"] },
+            {
+              "directive": "add_header",
+              "line": 112,
+              "args": ["X-Content-Type-Options", "nosniff"]
+            },
+            {
+              "directive": "add_header",
+              "line": 113,
+              "args": ["Referrer-Policy", "strict-origin"]
+            },
+            { "directive": "root", "line": 116, "args": ["/var/www/html"] },
+            { "directive": "index", "line": 117, "args": ["index.html"] },
+            {
+              "directive": "location",
+              "line": 120,
+              "args": ["~", "/\\."],
+              "block": [{ "directive": "deny", "line": 121, "args": ["all"] }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "/etc/nginx/sites-enabled/reverse_proxy",
+      "status": "ok",
+      "errors": [],
+      "parsed": [
+        {
+          "directive": "server",
+          "line": 2,
+          "args": [],
+          "block": [
+            { "directive": "listen", "line": 3, "args": ["80"] },
+            { "directive": "server_name", "line": 4, "args": ["myapp.local"] },
+            {
+              "directive": "location",
+              "line": 5,
+              "args": ["/"],
+              "block": [
+                { "directive": "return", "line": 6, "args": ["301", "https://$host$request_uri"] }
+              ]
+            }
+          ]
+        },
+        {
+          "directive": "server",
+          "line": 11,
+          "args": [],
+          "block": [
+            { "directive": "listen", "line": 12, "args": ["443", "ssl", "http2"] },
+            { "directive": "listen", "line": 13, "args": ["[::]:443", "ssl", "http2"] },
+            {
+              "directive": "server_name",
+              "line": 14,
+              "args": ["myapp.local", "192.168.1.55", "10.4.11.235"]
+            },
+            {
+              "directive": "ssl_certificate",
+              "line": 17,
+              "args": ["/etc/nginx/ssl/myapp.local.pem"]
+            },
+            {
+              "directive": "ssl_certificate_key",
+              "line": 18,
+              "args": ["/etc/nginx/ssl/myapp.local-key.pem"]
+            },
+            { "directive": "ssl_protocols", "line": 21, "args": ["TLSv1.2", "TLSv1.3"] },
+            {
+              "directive": "ssl_ciphers",
+              "line": 22,
+              "args": ["ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"]
+            },
+            { "directive": "ssl_prefer_server_ciphers", "line": 23, "args": ["on"] },
+            { "directive": "ssl_session_cache", "line": 24, "args": ["shared:SSL:10m"] },
+            { "directive": "ssl_session_timeout", "line": 25, "args": ["1d"] },
+            { "directive": "ssl_session_tickets", "line": 26, "args": ["off"] },
+            { "directive": "ssl_ecdh_curve", "line": 27, "args": ["secp384r1"] },
+            {
+              "directive": "add_header",
+              "line": 30,
+              "args": [
+                "Strict-Transport-Security",
+                "max-age=63072000; includeSubDomains; preload",
+                "always"
+              ]
+            },
+            {
+              "directive": "add_header",
+              "line": 31,
+              "args": ["X-Frame-Options", "DENY", "always"]
+            },
+            {
+              "directive": "add_header",
+              "line": 32,
+              "args": ["X-Content-Type-Options", "nosniff", "always"]
+            },
+            {
+              "directive": "add_header",
+              "line": 33,
+              "args": ["Referrer-Policy", "strict-origin", "always"]
+            },
+            {
+              "directive": "root",
+              "line": 36,
+              "args": ["/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass"]
+            },
+            { "directive": "index", "line": 37, "args": ["dist/index.html", "backend/index.php"] },
+            {
+              "directive": "location",
+              "line": 40,
+              "args": ["~", "/\\."],
+              "block": [{ "directive": "deny", "line": 41, "args": ["all"] }]
+            },
+            {
+              "directive": "location",
+              "line": 45,
+              "args": ["=", "/robots.txt"],
+              "block": [
+                {
+                  "directive": "root",
+                  "line": 46,
+                  "args": ["/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/backend/public"]
+                },
+                { "directive": "default_type", "line": 47, "args": ["text/plain"] },
+                { "directive": "try_files", "line": 48, "args": ["$uri", "=404"] },
+                {
+                  "directive": "add_header",
+                  "line": 50,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 51,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 52,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 53,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 57,
+              "args": ["=", "/sitemap.xml"],
+              "block": [
+                {
+                  "directive": "fastcgi_pass",
+                  "line": 58,
+                  "args": ["unix:/var/run/php/php-fpm.sock"]
+                },
+                { "directive": "fastcgi_index", "line": 59, "args": ["index.php"] },
+                {
+                  "directive": "include",
+                  "line": 60,
+                  "args": ["/etc/nginx/fastcgi_params"],
+                  "includes": [4]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 61,
+                  "args": [
+                    "SCRIPT_FILENAME",
+                    "/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/backend/public/sitemap.php"
+                  ]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 62,
+                  "args": ["PATH_INFO", "$fastcgi_path_info"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 65,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 66,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 67,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 68,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 71,
+                  "args": ["Content-Type", "application/xml; charset=utf-8", "always"]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 75,
+              "args": ["~*", "\\.(?:js|css|woff2|woff|webp|png|jpg|jpeg|svg|gif|ico|ttf|eot)$"],
+              "block": [
+                { "directive": "access_log", "line": 76, "args": ["off"] },
+                {
+                  "directive": "add_header",
+                  "line": 77,
+                  "args": ["Cache-Control", "public, max-age=31536000, immutable", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 80,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 81,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 82,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 83,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 87,
+              "args": ["/backend/"],
+              "block": [
+                {
+                  "directive": "fastcgi_pass",
+                  "line": 88,
+                  "args": ["unix:/var/run/php/php-fpm.sock"]
+                },
+                { "directive": "fastcgi_index", "line": 89, "args": ["index.php"] },
+                {
+                  "directive": "include",
+                  "line": 90,
+                  "args": ["/etc/nginx/fastcgi_params"],
+                  "includes": [4]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 91,
+                  "args": ["SCRIPT_FILENAME", "$document_root/backend/index.php"]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 92,
+                  "args": ["PATH_INFO", "$fastcgi_path_info"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 95,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 96,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 97,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 98,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 101,
+                  "args": ["Access-Control-Allow-Origin", "https://localhost:4173", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 103,
+                  "args": ["Access-Control-Allow-Credentials", "true", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 104,
+                  "args": [
+                    "Access-Control-Allow-Headers",
+                    "Content-Type, Authorization, X-Requested-With",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 105,
+                  "args": [
+                    "Access-Control-Allow-Methods",
+                    "GET, POST, OPTIONS, PUT, DELETE",
+                    "always"
+                  ]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 109,
+              "args": ["~", "\\.php$"],
+              "block": [
+                { "directive": "try_files", "line": 110, "args": ["$uri", "=404"] },
+                {
+                  "directive": "fastcgi_split_path_info",
+                  "line": 111,
+                  "args": ["^(.+\\.php)(/.+)$"]
+                },
+                {
+                  "directive": "fastcgi_pass",
+                  "line": 112,
+                  "args": ["unix:/var/run/php/php-fpm.sock"]
+                },
+                { "directive": "fastcgi_index", "line": 113, "args": ["index.php"] },
+                {
+                  "directive": "include",
+                  "line": 114,
+                  "args": ["/etc/nginx/fastcgi_params"],
+                  "includes": [4]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 115,
+                  "args": ["SCRIPT_FILENAME", "$document_root$fastcgi_script_name"]
+                },
+                {
+                  "directive": "fastcgi_param",
+                  "line": 116,
+                  "args": ["PATH_INFO", "$fastcgi_path_info"]
+                },
+                { "directive": "fastcgi_read_timeout", "line": 117, "args": ["60s"] }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 122,
+              "args": ["~*", "^/(composer\\.json|composer\\.lock|\\.env|\\.git)"],
+              "block": [{ "directive": "deny", "line": 123, "args": ["all"] }]
+            },
+            {
+              "directive": "location",
+              "line": 127,
+              "args": ["/"],
+              "block": [
+                { "directive": "try_files", "line": 128, "args": ["$uri", "$uri/", "/index.html"] }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 132,
+              "args": ["~", "/\\.(?!well-known).*"],
+              "block": [{ "directive": "deny", "line": 133, "args": ["all"] }]
+            }
+          ]
+        },
+        {
+          "directive": "server",
+          "line": 138,
+          "args": [],
+          "block": [
+            { "directive": "listen", "line": 139, "args": ["5173", "ssl", "http2"] },
+            { "directive": "listen", "line": 140, "args": ["[::]:5173", "ssl", "http2"] },
+            {
+              "directive": "server_name",
+              "line": 141,
+              "args": ["myapp.local", "192.168.1.55", "10.4.11.235"]
+            },
+            {
+              "directive": "ssl_certificate",
+              "line": 143,
+              "args": ["/etc/nginx/ssl/myapp.local_5173/server.crt"]
+            },
+            {
+              "directive": "ssl_certificate_key",
+              "line": 144,
+              "args": ["/etc/nginx/ssl/myapp.local_5173/server.key"]
+            },
+            {
+              "directive": "ssl_client_certificate",
+              "line": 145,
+              "args": ["/etc/nginx/ssl/myapp.local_5173/ca.crt"]
+            },
+            { "directive": "ssl_verify_client", "line": 146, "args": ["on"] },
+            { "directive": "ssl_protocols", "line": 148, "args": ["TLSv1.2", "TLSv1.3"] },
+            {
+              "directive": "ssl_ciphers",
+              "line": 149,
+              "args": ["ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"]
+            },
+            { "directive": "ssl_prefer_server_ciphers", "line": 150, "args": ["on"] },
+            { "directive": "ssl_session_cache", "line": 151, "args": ["shared:SSL:10m"] },
+            { "directive": "ssl_session_timeout", "line": 152, "args": ["1d"] },
+            { "directive": "ssl_session_tickets", "line": 153, "args": ["off"] },
+            { "directive": "ssl_ecdh_curve", "line": 154, "args": ["secp384r1"] },
+            {
+              "directive": "add_header",
+              "line": 157,
+              "args": [
+                "Strict-Transport-Security",
+                "max-age=63072000; includeSubDomains; preload",
+                "always"
+              ]
+            },
+            {
+              "directive": "add_header",
+              "line": 158,
+              "args": ["X-Frame-Options", "DENY", "always"]
+            },
+            {
+              "directive": "add_header",
+              "line": 159,
+              "args": ["X-Content-Type-Options", "nosniff", "always"]
+            },
+            {
+              "directive": "add_header",
+              "line": 160,
+              "args": ["Referrer-Policy", "strict-origin", "always"]
+            },
+            {
+              "directive": "location",
+              "line": 163,
+              "args": ["/ws"],
+              "block": [
+                { "directive": "proxy_pass", "line": 164, "args": ["http://127.0.0.1:8080"] },
+                { "directive": "proxy_http_version", "line": 165, "args": ["1.1"] },
+                {
+                  "directive": "proxy_set_header",
+                  "line": 166,
+                  "args": ["Upgrade", "$http_upgrade"]
+                },
+                { "directive": "proxy_set_header", "line": 167, "args": ["Connection", "Upgrade"] },
+                { "directive": "proxy_set_header", "line": 168, "args": ["Host", "$host"] },
+                { "directive": "proxy_read_timeout", "line": 169, "args": ["60s"] },
+                { "directive": "proxy_send_timeout", "line": 170, "args": ["60s"] },
+                { "directive": "proxy_buffering", "line": 171, "args": ["off"] }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 175,
+              "args": ["/backend/"],
+              "block": [
+                { "directive": "proxy_pass", "line": 176, "args": ["http://127.0.0.1:8081/"] },
+                { "directive": "proxy_http_version", "line": 177, "args": ["1.1"] },
+                { "directive": "proxy_set_header", "line": 178, "args": ["Host", "$host"] },
+                {
+                  "directive": "proxy_set_header",
+                  "line": 179,
+                  "args": ["X-Real-IP", "$remote_addr"]
+                },
+                {
+                  "directive": "proxy_set_header",
+                  "line": 180,
+                  "args": ["X-Forwarded-For", "$proxy_add_x_forwarded_for"]
+                },
+                {
+                  "directive": "proxy_set_header",
+                  "line": 181,
+                  "args": ["X-Forwarded-Proto", "$scheme"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 184,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 185,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 186,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 187,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 190,
+                  "args": ["Access-Control-Allow-Origin", "https://myapp.local", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 191,
+                  "args": ["Access-Control-Allow-Credentials", "true", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 192,
+                  "args": [
+                    "Access-Control-Allow-Headers",
+                    "Content-Type, Authorization, X-Requested-With",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 193,
+                  "args": [
+                    "Access-Control-Allow-Methods",
+                    "GET, POST, OPTIONS, PUT, DELETE",
+                    "always"
+                  ]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 197,
+              "args": ["~*", "\\.(?:js|css|woff2|woff|webp|png|jpg|jpeg|svg|gif|ico|ttf|eot)$"],
+              "block": [
+                {
+                  "directive": "root",
+                  "line": 198,
+                  "args": [
+                    "/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/dist/backend/backend5173"
+                  ]
+                },
+                { "directive": "access_log", "line": 199, "args": ["off"] },
+                {
+                  "directive": "add_header",
+                  "line": 200,
+                  "args": ["Cache-Control", "public, max-age=31536000, immutable", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 201,
+                  "args": [
+                    "Strict-Transport-Security",
+                    "max-age=63072000; includeSubDomains; preload",
+                    "always"
+                  ]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 202,
+                  "args": ["X-Frame-Options", "DENY", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 203,
+                  "args": ["X-Content-Type-Options", "nosniff", "always"]
+                },
+                {
+                  "directive": "add_header",
+                  "line": 204,
+                  "args": ["Referrer-Policy", "strict-origin", "always"]
+                }
+              ]
+            },
+            {
+              "directive": "location",
+              "line": 208,
+              "args": ["/"],
+              "block": [
+                {
+                  "directive": "root",
+                  "line": 209,
+                  "args": [
+                    "/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/dist/backend/backend5173"
+                  ]
+                },
+                { "directive": "try_files", "line": 210, "args": ["$uri", "$uri/", "/index.html"] }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "/etc/nginx/fastcgi_params",
+      "status": "ok",
+      "errors": [],
+      "parsed": [
+        { "directive": "fastcgi_param", "line": 2, "args": ["QUERY_STRING", "$query_string"] },
+        { "directive": "fastcgi_param", "line": 3, "args": ["REQUEST_METHOD", "$request_method"] },
+        { "directive": "fastcgi_param", "line": 4, "args": ["CONTENT_TYPE", "$content_type"] },
+        { "directive": "fastcgi_param", "line": 5, "args": ["CONTENT_LENGTH", "$content_length"] },
+        {
+          "directive": "fastcgi_param",
+          "line": 7,
+          "args": ["SCRIPT_NAME", "$fastcgi_script_name"]
+        },
+        { "directive": "fastcgi_param", "line": 8, "args": ["REQUEST_URI", "$request_uri"] },
+        { "directive": "fastcgi_param", "line": 9, "args": ["DOCUMENT_URI", "$document_uri"] },
+        { "directive": "fastcgi_param", "line": 10, "args": ["DOCUMENT_ROOT", "$document_root"] },
+        {
+          "directive": "fastcgi_param",
+          "line": 11,
+          "args": ["SERVER_PROTOCOL", "$server_protocol"]
+        },
+        { "directive": "fastcgi_param", "line": 12, "args": ["REQUEST_SCHEME", "$scheme"] },
+        { "directive": "fastcgi_param", "line": 13, "args": ["HTTPS", "$https", "if_not_empty"] },
+        { "directive": "fastcgi_param", "line": 15, "args": ["GATEWAY_INTERFACE", "CGI/1.1"] },
+        {
+          "directive": "fastcgi_param",
+          "line": 16,
+          "args": ["SERVER_SOFTWARE", "nginx/$nginx_version"]
+        },
+        { "directive": "fastcgi_param", "line": 18, "args": ["REMOTE_ADDR", "$remote_addr"] },
+        { "directive": "fastcgi_param", "line": 19, "args": ["REMOTE_PORT", "$remote_port"] },
+        { "directive": "fastcgi_param", "line": 20, "args": ["REMOTE_USER", "$remote_user"] },
+        { "directive": "fastcgi_param", "line": 21, "args": ["SERVER_ADDR", "$server_addr"] },
+        { "directive": "fastcgi_param", "line": 22, "args": ["SERVER_PORT", "$server_port"] },
+        { "directive": "fastcgi_param", "line": 23, "args": ["SERVER_NAME", "$server_name"] },
+        { "directive": "fastcgi_param", "line": 26, "args": ["REDIRECT_STATUS", "200"] }
+      ]
+    }
+  ]
+}

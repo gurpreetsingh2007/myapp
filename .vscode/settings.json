@@ -1,0 +1,16 @@
+{
+  "sqltools.connections": [
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "server": "172.21.229.219",
+      "port": 3306,
+      "driver": "MariaDB",
+      "username": "gurpreet",
+      "database": "testdb",
+      "name": "TEST"
+    }
+  ]
+}
