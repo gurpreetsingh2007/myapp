@@ -132,7 +132,7 @@ server {
 ```bash
 # Clone the repository
 git clone https://github.com/your-username/configmaster.git
-cd configmaster
+cd masterclass
 
 # Start frontend (Vue)
 cd frontend
@@ -140,7 +140,7 @@ npm install
 npm run dev
 
 # Backend (PHP) should be served via nginx + php-fpm
-# Adjust nginx.conf accordingly
+# Adjust nginx.conf or in sites-avalabile create a server block(previede in the repo) and genertate certificates (if for personal use)
 
 # Start the WebSocket server
 cd backend/websocket
@@ -178,5 +178,5 @@ See the [LICENSE](./LICENSE) file for details.
 ## 👤 Author
 
 **Singh Gurpreet**
-Graduation project – 4^BIN, University of Cagliari (UniCA)
-Contact: \[[your-email@example.com](mailto:your-email@example.com) or GitHub profile link]
+Graduation project – 4^BIN, NULLO BALDINI ITIS RAVENNA
+Contact: \[[CONTACT ME](mailto:gurpreetchouhan2007@gmail.com)]
