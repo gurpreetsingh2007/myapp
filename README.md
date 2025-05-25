@@ -1,3 +1,4 @@
+**this is dog shit explanation**
 # ConfigMaster
 
 **ConfigMaster** is a web-based platform for the **centralized management of server configurations**. Designed for system administrators and advanced users, it simplifies the configuration and monitoring of services like **NGINX**, **MariaDB**, **rsnapshot**, and more — securely accessible from anywhere.
