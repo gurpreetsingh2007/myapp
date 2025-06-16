@@ -23,11 +23,19 @@ export default defineConfig({
     },
   },
   server: {
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 4173,
     https: {
       key: fs.readFileSync('./localhost-key.pem'),
       cert: fs.readFileSync('./localhost.pem'),
+    },
+    proxy: {
+      '/backend': {
+        target: 'https://172.18.90.196',
+        changeOrigin: true,
+        secure: false,
+        //rewrite: (path) => path.replace(/^\/api/, ''),
+      },
     },
   },
 })

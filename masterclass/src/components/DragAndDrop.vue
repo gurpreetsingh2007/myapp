@@ -1,4 +1,4 @@
 <template>
-  <h1>hello</h1>
+  <h1>fuck you</h1>
 </template>
 
