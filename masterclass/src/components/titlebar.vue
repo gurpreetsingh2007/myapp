@@ -162,16 +162,17 @@
           <!-- Actions dropdown for small screens -->
           <div
             v-if="showActionMenu"
+            ref="actionMenuContainer"
             class="absolute right-0 mt-2 w-48 bg-[#121212] border border-[rgba(0,240,255,0.2)] rounded-lg shadow-lg overflow-hidden z-50 sm:hidden"
           >
             <div class="py-2">
-                <button
-                  @click="
-                    goBack();
-                    toggleActionMenu()
-                  "
-                  class="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-[rgba(0,240,255,0.1)] transition-colors"
-                >
+              <button
+                @click="
+                  goBack(),
+                  toggleActionMenu()
+                "
+                class="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-[rgba(0,240,255,0.1)] transition-colors"
+              >
                 <ArrowLeftIcon class="w-4 h-4 mr-2" />
                 Back
               </button>
@@ -311,7 +312,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useSidebarStore } from '@/stores/sidebar'
@@ -351,6 +352,29 @@ function logout() {
 function toggleActionMenu() {
   showActionMenu.value = !showActionMenu.value
 }
+const actionMenuContainer = ref<HTMLElement | null>(null)
+// Click outside handler
+const handleClickOutside = (event: MouseEvent) => {
+  if (actionMenuContainer.value && !actionMenuContainer.value.contains(event.target as Node)) {
+    showActionMenu.value = false
+  }
+}
+
+// Watch for menu state changes
+watch(showActionMenu, (newValue) => {
+  if (newValue) {
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside)
+    }, 0)
+  } else {
+    document.removeEventListener('click', handleClickOutside)
+  }
+})
+
+// Cleanup
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Window resize handler
 const handleResize = () => {

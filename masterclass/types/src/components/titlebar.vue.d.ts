@@ -14,6 +14,7 @@ declare const breadcrumbs: import("vue").ComputedRef<{
 declare function goBack(): void;
 declare function logout(): void;
 declare function toggleActionMenu(): void;
+declare const actionMenuContainer: import("vue").Ref<HTMLElement | null, HTMLElement | null>;
 declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
 declare var __VLS_49: {};
 type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & {
@@ -34,6 +35,7 @@ declare const __VLS_self: import("vue").DefineComponent<{}, {
     goBack: typeof goBack;
     logout: typeof logout;
     toggleActionMenu: typeof toggleActionMenu;
+    actionMenuContainer: typeof actionMenuContainer;
 }, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;

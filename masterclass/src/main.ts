@@ -15,15 +15,9 @@ const router = createRouter({
   routes,
 })
 
-const protectedRoutes = [
-  '/dashboard',
-  '/dashboard/dashboard',
-  '/dashboard/profile',
-  '/dashboard/settings',
-]
-
 for (const route of router.getRoutes()) {
-  if (protectedRoutes.includes(route.path)) {
+  // Check if the route path starts with '/dashboard/'
+  if (route.path.startsWith('/dashboard')) {
     route.meta.requiresAuth = true
   }
 }
@@ -35,7 +29,7 @@ router.beforeEach(async (to, from, next) => {
 
   // If route doesn't require auth, allow navigation
   if (!to.meta.requiresAuth) {
-    //console.log('Does not require login')
+    //console.log('Does not require login')s
     return next()
   }
 

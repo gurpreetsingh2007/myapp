@@ -19,7 +19,7 @@ export declare const useJsonDataStore: import("pinia").StoreDefinition<"jsonData
     isDataLoaded: import("vue").ComputedRef<boolean>;
     fetchJsonData: (path: string, id: string) => Promise<any>;
     updateJsonData: (id: string, path: string, data: string) => Promise<any>;
-}, "error" | "jsonData" | "isLoading">, Pick<{
+}, "jsonData" | "isLoading" | "error">, Pick<{
     isLoading: import("vue").Ref<boolean, boolean>;
     error: import("vue").Ref<string | null, string | null>;
     jsonData: import("vue").Ref<{

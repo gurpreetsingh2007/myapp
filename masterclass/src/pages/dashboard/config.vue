@@ -8,9 +8,7 @@
     </div>
 
     <!-- Column 2: Buttons -->
-    <div
-      class="buttons-column w-10 flex flex-col items-center justify-start px-2 pt-4 space-y-4 "
-    >
+    <div class="buttons-column w-10 flex flex-col items-center justify-start px-2 pt-4 space-y-4">
       <!-- Sidebar Toggle Button -->
       <button
         @click="toggleSidebar"
@@ -111,6 +109,7 @@ const toggleSidebar = () => {
   isPulsing.value = true
   setTimeout(() => (isPulsing.value = false), 600)
   nextTick(() => updateLayout())
+
 }
 
 const componentWidth = ref('100%')
@@ -185,13 +184,13 @@ const handleSidebarToggle = (isOpen: boolean) => {
   background: var(--cm-selection) !important;
 }
 
-.nginx-editor  .cm-keyword {
+.nginx-editor .cm-keyword {
   color: var(--cm-keyword);
 }
 .nginx-editor .cm-string {
   color: var(--cm-string);
 }
-.nginx-editor  .cm-comment {
+.nginx-editor .cm-comment {
   color: var(--cm-comment);
 }
 

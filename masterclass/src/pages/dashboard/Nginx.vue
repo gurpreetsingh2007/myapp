@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gray-900">
+  <div class="bg-gray-850 rounded-2xl">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-bold text-white flex items-center gap-2">
@@ -53,7 +53,7 @@
           v-model="searchQuery"
           type="text"
           placeholder="Search configurations..."
-          class="block w-full pl-10 pr-4 py-3 text-base border-2 border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
+          class="block w-full pl-10 pr-4 py-3 text-base border-1 border-gray-700 rounded-xl bg-gray-800 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all"
         />
       </div>
 
@@ -114,7 +114,7 @@
 
     <!-- File Tree -->
     <div
-      class="file-tree bg-gray-800 rounded-lg p-4 shadow-lg overflow-auto max-h-[60vh] border border-gray-700"
+      class="file-tree bg-gray-950 rounded-lg p-4 shadow-lg overflow-auto max-h-[60vh] border border-gray-700"
     >
       <div v-if="config.loading" class="flex justify-center items-center py-8">
         <svg
@@ -333,7 +333,9 @@
 import { ref, onMounted, computed, defineComponent, h } from 'vue'
 import { useRouter } from 'vue-router'
 //import { API } from '@/config/index'
+import { useRightSidebarStore } from '@/stores/sidebar.ts'
 import { useConfigStore } from '@/stores/config'
+const sidebar = useRightSidebarStore()
 const config = useConfigStore()
 
 interface Config {
@@ -363,6 +365,7 @@ const searchQuery = ref('')
 const router = useRouter()
 const navigateToConfig = (path: string) => {
   router.push(`/dashboard/config?block_id=nginx&section_id=${encodeURIComponent(path)}`)
+  sidebar.changeBackgroundImage()
 }
 
 // Format date

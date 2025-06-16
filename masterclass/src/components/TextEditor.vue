@@ -125,7 +125,7 @@ const isDataLoaded = computed(() => jsonData.value !== null && jsonData.value.su
 // Refresh button handler
 function refreshData() {
   jsonDataStore.fetchJsonData(info.info.sectionId, info.info.store_number)
-  
+
 }
 
 // Save button handler
@@ -180,7 +180,7 @@ const formattedConfig = computed(() => {
       const parsed = JSON.parse(raw)
       return parseDirective(parsed)
     } else {
-      console.warn('json_data is not a string:', raw)
+      //console.warn('json_data is not a string:', raw)
       return '# ERROR 1'
     }
   } catch (e) {

@@ -66,9 +66,11 @@
       <!-- Content - Scrollable Area -->
       <div
         ref="scrollRef"
-        class="flex-grow overflow-y-auto"
+        class="flex-grow overflow-y-auto bg-cover bg-center"
         :class="{ 'opacity-100': sidebar.isOpen, 'opacity-0': !sidebar.isOpen }"
+        :style="{ backgroundImage: `url(${sidebar.backgroundImageUrl})` }"
       >
+
         <div class="p-6">
           <!-- Loading state -->
           <div v-if="loading" class="flex justify-center items-center h-40">
@@ -112,6 +114,7 @@
                         class="absolute inset-0 rounded-lg bg-[#00f0ff] opacity-0 group-hover/trigger:opacity-10 transition-opacity duration-300"
                       ></div>
                       <!-- Dots icon -->
+
                       <svg
                         class="w-6 h-6 text-[#00f0ff] transform transition-transform duration-300 hover:scale-110"
                         fill="currentColor"
@@ -215,12 +218,12 @@
                   class="bg-[rgba(0,0,0,0.6)] rounded-md px-3 py-1 border border-[rgba(0,240,255,0.2)]"
                 >
                   <span
-                    class="text-sm font-bold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
+                    class="text-md font-bold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
                   >
                     #{{ row.id }}
                   </span>
                 </div>
-                <span class="text-lg font-medium tracking-wide text-center">{{ row.title }}</span>
+                <span class="text-lg  font-small tracking-wide text-center">{{ row.title }}</span>
                 <div
                   class="h-0.5 w-10 mt-2 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 bg-gradient-to-r from-[#00f0ff] to-[#d000ff]"
                 ></div>
@@ -416,6 +419,7 @@ import { Path } from '@/stores/path'
 import { API } from '@/config/index'
 import { useRightSidebarStore } from '@/stores/sidebar.ts'
 
+
 import { useJsonDataStore } from '@/stores/block'
 const jsonDataStore = useJsonDataStore()
 const sidebar = useRightSidebarStore()
@@ -496,12 +500,11 @@ const deleteBlock = (id: string) => {
 const fetchBlock = async () => {
   const path_name = path.info.sectionId
   const id = path.info.store_number
-    try {
-      await jsonDataStore.fetchJsonData(path_name, id)
-    } catch (err) {
-      console.error('Failed to fetch block data:', err)
-    }
-  
+  try {
+    await jsonDataStore.fetchJsonData(path_name, id)
+  } catch (err) {
+    console.error('Failed to fetch block data:', err)
+  }
 }
 
 // Confirm deletion

@@ -1,6 +1,8 @@
 {
     "require": {
         "firebase/php-jwt": "^6.11",
-        "phpseclib/phpseclib": "^3.0"
+        "phpseclib/phpseclib": "^3.0",
+        "cboden/ratchet": "^0.4.4",
+        "react/http": "^1.11"
     }
 }
