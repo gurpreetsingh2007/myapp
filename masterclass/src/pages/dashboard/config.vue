@@ -90,8 +90,8 @@ import { ref, watch, onMounted, shallowRef, defineAsyncComponent, nextTick } fro
 import Rightbar from '@/components/rightBar.vue'
 import { useRightSidebarStore } from '@/stores/sidebar.ts'
 
-const ComponentA = defineAsyncComponent(() => import('@/components/TextEditor.vue'))
-const ComponentB = defineAsyncComponent(() => import('@/components/DragAndDrop.vue'))
+const ComponentB = defineAsyncComponent(() => import('@/components/TextEditor.vue'))
+const ComponentA = defineAsyncComponent(() => import('@/components/DragAndDrop.vue'))
 
 const sidebar = useRightSidebarStore()
 const isComponentToggled = ref(false)
@@ -146,7 +146,7 @@ const handleSidebarToggle = (isOpen: boolean) => {
 }
 </script>
 
-<style>
+<style scoped>
 .nginx-editor {
   --cm-foreground: #00f0ff;
   --cm-background: #000000;

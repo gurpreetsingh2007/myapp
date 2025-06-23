@@ -240,7 +240,6 @@ type MenuItem = {
 const menuItems = reactive<MenuItem[]>([
   { title: 'Dashboard', icon: 'dashboard', path: '/dashboard', active: true },
   { title: 'Profile', icon: 'profile', path: '/dashboard/profile', active: false },
-  { title: 'Messages', icon: 'messages', path: '/dashboard/messages', active: false },
   { title: 'Settings', icon: 'settings', path: '/dashboard/settings', active: false },
   { title: 'Analytics', icon: 'analytics', path: '/dashboard/analytics', active: false },
   {

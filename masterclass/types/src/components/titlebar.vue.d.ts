@@ -2,7 +2,6 @@ import { RouterLink } from 'vue-router';
 import { ArrowLeftIcon, HomeIcon } from '@heroicons/vue/24/outline';
 import { useUserStore } from '@/stores/user';
 declare const isOpen: import("vue").Ref<boolean, boolean>;
-declare const isSearchFocused: import("vue").Ref<boolean, boolean>;
 declare const showMobileSearch: import("vue").Ref<boolean, boolean>;
 declare const showActionMenu: import("vue").Ref<boolean, boolean>;
 declare const isCompactView: import("vue").ComputedRef<boolean>;
@@ -12,7 +11,7 @@ declare const breadcrumbs: import("vue").ComputedRef<{
     path: string;
 }[]>;
 declare function goBack(): void;
-declare function logout(): void;
+declare function logout(): Promise<void>;
 declare function toggleActionMenu(): void;
 declare const actionMenuContainer: import("vue").Ref<HTMLElement | null, HTMLElement | null>;
 declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
@@ -26,7 +25,6 @@ declare const __VLS_self: import("vue").DefineComponent<{}, {
     HomeIcon: typeof HomeIcon;
     useUserStore: typeof useUserStore;
     isOpen: typeof isOpen;
-    isSearchFocused: typeof isSearchFocused;
     showMobileSearch: typeof showMobileSearch;
     showActionMenu: typeof showActionMenu;
     isCompactView: typeof isCompactView;

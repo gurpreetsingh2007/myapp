@@ -87,7 +87,7 @@
         </p>
       </div>
 
-      <div
+      <div v-else
         class="absolute inset-0 border-[1px] border-[#00f0ff33] shadow-[inset_0_0_30px_rgba(0,240,255,0.1)]"
       >
         <div ref="editorContainer" class="h-full w-full neon-editor"></div>
@@ -111,7 +111,8 @@ import { debounce } from 'lodash-es'
 const nginxLanguage = StreamLanguage.define(nginx)
 const editorContainer = ref<HTMLElement | null>(null)
 let view: EditorView | null = null
-let isProgrammaticChange = false // <- Flag to prevent unwanted save
+let isProgrammaticChange = false
+let isUpdatingFromEditor = false
 
 // Path and store
 const info = Path()
@@ -125,75 +126,188 @@ const isDataLoaded = computed(() => jsonData.value !== null && jsonData.value.su
 // Refresh button handler
 function refreshData() {
   jsonDataStore.fetchJsonData(info.info.sectionId, info.info.store_number)
-
 }
 
-// Save button handler
-function save() {
-  if (info.info.store_number === jsonData.value.id) {
-    if (view) {
-      const content = view.state.doc.toString()
-      try {
-        jsonDataStore.updateJsonData(info.info.store_number, info.info.sectionId, content)
-      } catch (e) {
-        console.error('Manual save failed:', e)
-      }
-    }
-  }
-}
+
 
 // Properly handles optional/invalid directives
 function parseDirective(data: any, indent = 0): string {
   const indentStr = '  '.repeat(indent)
   let result = ''
+  if (
+    !data ||
+    !data.directive ||
+    typeof data.directive !== 'string' ||
+    data.directive.trim() === ''
+  )
+    return ''
 
-  if (!data) return ''
+  result += `${indentStr}${data.directive}`
 
-  if (data.directive) {
-    result += `${indentStr}${data.directive}`
-    if (data.args && data.args.length > 0) {
+  if (Array.isArray(data.args) && data.args.length) {
+    if (data.directive == 'server_name') {
+      result += ' ' + data.args.join('\n\t\t\t  ')
+    }
+    else {
       result += ' ' + data.args.join(' ')
     }
   }
 
-  if (data.block && data.block.length > 0) {
-    if (data.directive) result += ' '
-    result += '{\n'
+  if (Array.isArray(data.block) && data.block.length) {
+    result += ' {\n'
     for (const item of data.block) {
       const child = parseDirective(item, indent + 1)
-      if (child.trim() !== '') result += child + '\n'
+      if (child.trim()) result += child + '\n'
     }
     result += `${indentStr}}`
-  } else if (data.directive) {
+  } else {
     result += ';'
   }
 
   return result
 }
 
-// Convert JSON structure into formatted NGINX config
-const formattedConfig = computed(() => {
-  if (!jsonData.value || jsonData.value.success === false) return ''
-  try {
-    const raw = jsonData.value.json_data
-    if (typeof raw === 'string') {
-      const parsed = JSON.parse(raw)
-      return parseDirective(parsed)
-    } else {
-      //console.warn('json_data is not a string:', raw)
-      return '# ERROR 1'
-    }
-  } catch (e) {
-    console.error('Failed to parse JSON data:', e)
-    return '# ERROR 2'
+type NginxEntry = {
+  directive: string;
+  line: number;
+  args: string[];
+  block?: NginxEntry[];
+};
+
+function parseNginxBlock(configText: string): NginxEntry | null {
+  const lines = configText.split(/\r?\n/);
+  let lineNumber = 0;
+  let index = 0;
+
+  function parseArgs(argString: string): string[] {
+    return argString
+      .split(/\s+/)
+      .map(arg => arg.trim())
+      .filter(arg => arg.length > 0);
   }
-})
+
+  function parseBlock(): NginxEntry[] {
+    const block: NginxEntry[] = [];
+
+    while (index < lines.length) {
+      let line = lines[index].trim();
+      lineNumber++;
+
+      if (line === '') {
+        index++;
+        continue;
+      }
+
+      if (line === '}') {
+        index++;
+        break;
+      }
+
+      const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s*(.*?)\s*(\{?|;)?$/);
+      if (match) {
+        const [, directive, argStringRaw, ending] = match;
+        let args = parseArgs(argStringRaw.replace(/;$/, ''));
+
+        const entry: NginxEntry = {
+          directive,
+          line: lineNumber,
+          args,
+        };
+
+        // Handle multiline arguments
+        while (
+          index + 1 < lines.length &&
+          !line.trim().endsWith(';') &&
+          !line.trim().endsWith('{') &&
+          !ending
+        ) {
+          index++;
+          lineNumber++;
+          const extra = lines[index].trim();
+          if (extra === '') continue;
+          args = args.concat(parseArgs(extra.replace(/;$/, '')));
+          entry.args = args;
+          line = lines[index]; // update line for loop
+        }
+
+        if (ending === '{') {
+          index++;
+          entry.block = parseBlock();
+        } else {
+          index++;
+        }
+
+        block.push(entry);
+      } else {
+        index++;
+      }
+    }
+
+    return block;
+  }
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    lineNumber++;
+
+    if (line === '' || line.startsWith('#')) {
+      index++;
+      continue;
+    }
+
+    const blockStartMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s*\{$/);
+    if (blockStartMatch) {
+      const [, directive] = blockStartMatch;
+      index++;
+      return {
+        directive,
+        line: lineNumber,
+        args: [],
+        block: parseBlock(),
+      };
+    }
+
+    const singleLineMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s+(.*?)\s*;$/);
+    if (singleLineMatch) {
+      const [, directive, argsRaw] = singleLineMatch;
+      const args = parseArgs(argsRaw);
+      index++;
+      return {
+        directive,
+        line: lineNumber,
+        args,
+      };
+    }
+
+    index++;
+  }
+
+  return null;
+}
+
+// Save button handler
+function save() {
+  if (info.info.store_number === jsonData.value.id && view) {
+    const content = view.state.doc.toString()
+    try {
+      jsonDataStore.updateJsonData(info.info.store_number, info.info.sectionId, content)
+      isUpdatingFromEditor = true
+      jsonData.value.json_data = JSON.stringify(parseNginxBlock(content))
+      //isUpdatingFromEditor = false
+    } catch (e) {
+      console.error('Manual save failed:', e)
+    }
+  }
+}
 
 // Debounced live update handler
 const debouncedUpdate = debounce((content: string) => {
   if (info.info.store_number === jsonData.value.id) {
     try {
       jsonDataStore.updateJsonData(info.info.store_number, info.info.sectionId, content)
+      isUpdatingFromEditor = true
+      jsonData.value.json_data = JSON.stringify(parseNginxBlock(content))
+      //isUpdatingFromEditor = false
     } catch (e) {
       console.error('Live update failed:', e)
     }
@@ -204,10 +318,18 @@ const debouncedUpdate = debounce((content: string) => {
 onMounted(() => {
   if (!editorContainer.value) return
 
-  const initialContent = formattedConfig.value
+  let initial = ''
+  try {
+    if (jsonData.value?.json_data) {
+      const parsed = JSON.parse(jsonData.value.json_data)
+      initial = parseDirective(parsed)
+    }
+  } catch (e) {
+    console.error('Initial parse failed:', e)
+  }
 
   view = new EditorView({
-    doc: initialContent,
+    doc: initial,
     extensions: [
       basicSetup,
       nginxLanguage,
@@ -278,26 +400,40 @@ onMounted(() => {
   }
 })
 
-// Watch for external changes and update editor content programmatically
+// Watch for actual changes in json_data and update editor
 watch(
-  () => jsonData.value,
-  (newVal) => {
-    if (view && newVal && newVal.success !== false) {
-      const newContent = formattedConfig.value
-      const currentContent = view.state.doc.toString()
-      if (currentContent !== newContent) {
-        isProgrammaticChange = true
-        view.dispatch({
-          changes: {
-            from: 0,
-            to: view.state.doc.length,
-            insert: newContent,
-          },
-        })
-        isProgrammaticChange = false
-      }
+  () => jsonData.value.json_data,
+  (newJson) => {
+    if (isUpdatingFromEditor) {
+      isUpdatingFromEditor = false
+      return
     }
-  },
+    if (!view || jsonData.value?.success === false) return;
+
+    let parsed: any
+    try {
+      parsed = typeof newJson === 'string' ? JSON.parse(newJson) : null
+    } catch (e) {
+      console.error('Failed to parse updated JSON:', e)
+      return
+    }
+    if (!parsed) return
+
+    const newContent = parseDirective(parsed)
+    const currentContent = view.state.doc.toString()
+
+    if (currentContent !== newContent) {
+      isProgrammaticChange = true
+      view.dispatch({
+        changes: {
+          from: 0,
+          to: view.state.doc.length,
+          insert: newContent,
+        },
+      })
+      isProgrammaticChange = false
+    }
+  }
 )
 
 // Cleanup
@@ -314,7 +450,6 @@ onBeforeUnmount(() => {
   --cm-cursor: #00f0ff;
   --cm-selection: #00f0ff30;
 }
-
 .cm-editor {
   background: var(--cm-background) !important;
   font-family: 'Orbitron', monospace !important;
@@ -336,26 +471,6 @@ onBeforeUnmount(() => {
 
 .cm-selectionBackground {
   background: var(--cm-selection) !important;
-}
-
-/* Custom scrollbars */
-.cm-scroller::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-.cm-scroller::-webkit-scrollbar-track {
-  background: #00000050;
-}
-
-.cm-scroller::-webkit-scrollbar-thumb {
-  background: #00f0ff;
-  border-radius: 4px;
-  border: 1px solid #000000;
-}
-
-.cm-scroller::-webkit-scrollbar-thumb:hover {
-  background: #d000ff;
 }
 
 /* Animations */

@@ -20,9 +20,8 @@ register_shutdown_function(function () {
 });
 require 'vendor/autoload.php';
 require_once 'keys/keys.php';
-require_once 'login/login.php';
+require_once 'login/login.php'; 
 require_once 'db/config.php';
-
 
 set_time_limit(0);
 $endpoint = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : $_SERVER['PHP_SELF'];
@@ -49,6 +48,11 @@ try {
         mainLogin(json_decode(file_get_contents('php://input'), true));
         exit;
     }
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cleanEndpoint === "/credentials/exit") {
+        pageLogin(json_decode(file_get_contents('php://input'), true));
+        EXIT_FUNC();
+        exit;
+    }
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cleanEndpoint === "/credentials/logincheack") {
         pageLogin(json_decode(file_get_contents('php://input'), true));
         exit;
@@ -72,7 +76,16 @@ try {
     //put data form the json file if destroyed
     if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/put/data") {
         loadDataJson();
-        TypeOfDataForDragAndDrop();
+        createHistoryTable();
+        createLogTable();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/history") {
+        giveHistory();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/searchHistory") {
+        searchHistory($_GET['q'] ?? '');
         exit;
     }
 
@@ -130,6 +143,23 @@ try {
         updateJsonData();
         exit;
     }
+
+
+
+    ////////////////////////////////////////server------------------------
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/send/files") {
+        sendFiles(json_decode(file_get_contents("php://input"), true));
+        exit;
+    }
+    if($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/server_list"){
+        sendServerList();
+        exit;
+    }
+    if($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/send/partialFilesServer"){
+        sendPartialFilesServer(json_decode(file_get_contents("php://input"), true));
+        exit;
+    }
+
 
 
     // 404 for unknown routes

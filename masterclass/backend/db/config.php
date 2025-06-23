@@ -38,7 +38,8 @@ function resetDatabase()
                 file_name VARCHAR(255) NOT NULL,
                 status VARCHAR(20),
                 errors TEXT,
-                last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                deployed VARCHAR(1)
             );
         ");
 
@@ -63,13 +64,14 @@ function createDirectiveTable($conn, $tableName)
 function insertFileMetadata($conn, $file, $status, $errors)
 {
     $stmt = $conn->prepare("
-        INSERT INTO config_file_index (file_name, status, errors)
-        VALUES (:file, :status, :errors)
+        INSERT INTO config_file_index (file_name, status, errors, deployed)
+        VALUES (:file, :status, :errors, :deployed)
     ");
     $stmt->execute([
         ':file' => $file,
         ':status' => $status,
-        ':errors' => json_encode($errors)
+        ':errors' => json_encode($errors),
+        ':deployed' => 'y'
     ]);
 }
 
@@ -114,63 +116,157 @@ function loadDataJson()
         insertParsedDirectives($conn, $tableName, $configItem['parsed']);
     }
 }
-function TypeOfDataForDragAndDrop()
-{
-    $jsonPath = __DIR__ . '/../data/config.json'; // same path as loadDataJson()
-    $jsonContent = file_get_contents($jsonPath);
-    $data = json_decode($jsonContent, true);
-    if (!$data || !isset($data['config'])) {
-        die("Invalid JSON format.");
-    }
 
+
+function createHistoryTable()
+{
     $conn = getDbConnection();
-    createDragDropTable($conn);
+    $conn->exec("DROP TABLE IF EXISTS history_Nginx");
 
-    foreach ($data['config'] as $configItem) {
-        $file = $configItem['file'];
-        if (!isset($configItem['parsed']))
-            continue;
-
-        foreach ($configItem['parsed'] as $directive) {
-            insertDirectiveRecursively($conn, $directive, $file, null);
-        }
-    }
-}
-
-function createDragDropTable($conn)
-{
-    $conn->exec("DROP TABLE IF EXISTS dragdrop_directives");
     $conn->exec("
-        CREATE TABLE dragdrop_directives (
+        CREATE TABLE history_Nginx (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            directive VARCHAR(255),
-            args TEXT,
-            parent_id INT DEFAULT NULL,
-            FOREIGN KEY (parent_id) REFERENCES dragdrop_directives(id) ON DELETE CASCADE
+            editor_name VARCHAR(255),
+            editor_gmail VARCHAR(255),
+            edit_datetime DATETIME DEFAULT CURRENT_TIMESTAMP,
+            old_text TEXT,
+            comment TEXT,
+            action VARCHAR(255),
+            table_edited VARCHAR(255),
+            table_row_id INT,
+            column_title TEXT
         )
     ");
 }
-
-function insertDirectiveRecursively(PDO $conn, array $directive, string $file, ?int $parentId)
+function addHistoryRow($editorName, $editorGmail, $oldText, $comment, $action, $tableEdited, $tableRowId, $columnTitle)
 {
-    $stmt = $conn->prepare("
-        INSERT INTO dragdrop_directives (directive, args, parent_id)
-        VALUES ( :directive, :args, :parent_id)
-    ");
-    $stmt->execute([
-        ':directive' => $directive['directive'],
-        ':args' => json_encode($directive['args'] ?? []),
-        ':parent_id' => $parentId
-    ]);
+    try {
+        $conn = getDbConnection();
 
-    $newId = $conn->lastInsertId();
+        // Step 1: Check for a recent similar row (within 5 seconds)
+        $stmt = $conn->prepare("
+            SELECT id FROM history_Nginx
+            WHERE 
+                editor_name = :editor_name AND
+                editor_gmail = :editor_gmail AND
+                table_edited = :table_edited AND
+                table_row_id = :table_row_id AND
+                column_title = :column_title AND
+                edit_datetime >= NOW() - INTERVAL 10 SECOND
+            ORDER BY edit_datetime DESC
+            LIMIT 1
+        ");
 
-    if (!empty($directive['block']) && is_array($directive['block'])) {
-        foreach ($directive['block'] as $child) {
-            insertDirectiveRecursively($conn, $child, $file, $newId);
+        $stmt->execute([
+            ':editor_name' => $editorName,
+            ':editor_gmail' => $editorGmail,
+            ':table_edited' => $tableEdited,
+            ':table_row_id' => $tableRowId,
+            ':column_title' => $columnTitle
+        ]);
+
+        $lastId = $stmt->fetchColumn();
+
+        // Step 2: If a matching recent row is found, delete it
+        if ($lastId) {
+            // Delete the recent matching row
+            $deleteStmt = $conn->prepare("DELETE FROM history_Nginx WHERE id = :id");
+            $deleteStmt->execute([':id' => $lastId]);
+
+            // Check if the deleted row had the highest ID
+            $checkStmt = $conn->query("SELECT MAX(id) AS max_id FROM history_Nginx");
+            $maxId = $checkStmt->fetchColumn();
+
+            if ($maxId !== false && $lastId > $maxId) {
+                // Reset AUTO_INCREMENT to reuse the ID
+                $conn->exec("ALTER TABLE history_Nginx AUTO_INCREMENT = $lastId");
+            }
         }
+
+        // Step 3: Insert the new row
+        $insertStmt = $conn->prepare("
+            INSERT INTO history_Nginx (
+                editor_name,
+                editor_gmail,
+                old_text,
+                comment,
+                action,
+                table_edited,
+                table_row_id,
+                column_title
+            ) VALUES (
+                :editor_name,
+                :editor_gmail,
+                :old_text,
+                :comment,
+                :action,
+                :table_edited,
+                :table_row_id,
+                :column_title
+            )
+        ");
+
+        $insertStmt->execute([
+            ':editor_name' => $editorName,
+            ':editor_gmail' => $editorGmail,
+            ':old_text' => $oldText,
+            ':comment' => $comment,
+            ':action' => $action,
+            ':table_edited' => $tableEdited,
+            ':table_row_id' => $tableRowId,
+            ':column_title' => $columnTitle
+        ]);
+    } catch (PDOException $e) {
+        error_log("History insert failed: " . $e->getMessage());
+        throw $e;
     }
 }
+
+
+function createLogTable()
+{
+    $conn = getDbConnection();
+    $conn->exec("DROP TABLE IF EXISTS log_site");
+
+    $conn->exec("
+        CREATE TABLE log_site (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            editor_name VARCHAR(255),
+            editor_gmail VARCHAR(255),
+            action VARCHAR(10),
+            datetime DATETIME DEFAULT CURRENT_TIMESTAMP,
+            success BOOLEAN
+        )
+    ");
+}
+function addLogRow($editorName, $editorGmail, $action, $success)
+{
+    $conn = getDbConnection();
+
+    $stmt = $conn->prepare("
+        INSERT INTO log_site (
+            editor_name,
+            editor_gmail,
+            action,
+            success
+        ) VALUES (
+            :editor_name,
+            :editor_gmail,
+            :action,
+            :success
+        )
+    ");
+
+    $stmt->execute([
+        ':editor_name' => $editorName,
+        ':editor_gmail' => $editorGmail,
+        ':action' => $action,
+        ':success' => $success ? 1 : 0,
+    ]);
+}
+
+
+
 
 function getConfigFileIndex()
 {
@@ -269,6 +365,19 @@ function createBlock($path)
         $insertStmt->execute([$data['title'], $jsonData]);
 
         $newId = $conn->lastInsertId();
+        addHistoryRow(
+            $_SESSION['email'] ?? 'Unknown',
+            $_SESSION['username'] ?? 'unknown@example.com',
+            '', // oldText is empty for creation
+            $data['comment'] ?? 'Created new block',
+            'create',
+            $tableName,
+            $newId,
+            $data['title']
+        );
+        // ? Mark config as not deployed
+        $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
+        $resetDeployStmt->execute([$fileName]);
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -289,8 +398,8 @@ function updateBlock($id, $path)
         $conn = getDbConnection();
 
         // Get JSON data from request body
-        $jsonData = file_get_contents('php://input');
-        $data = json_decode($jsonData, true);
+        $jsonDataRaw = file_get_contents('php://input');
+        $data = json_decode($jsonDataRaw, true);
 
         if (!$data) {
             http_response_code(400);
@@ -323,17 +432,18 @@ function updateBlock($id, $path)
             return;
         }
 
-        // Check if the record exists
-        $checkRecordStmt = $conn->prepare("SELECT id FROM `$tableName` WHERE id = ?");
+        // Check if the record exists and fetch the old values
+        $checkRecordStmt = $conn->prepare("SELECT title, json_data FROM `$tableName` WHERE id = ?");
         $checkRecordStmt->execute([$id]);
+        $existing = $checkRecordStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($checkRecordStmt->rowCount() === 0) {
+        if (!$existing) {
             http_response_code(404);
             echo json_encode(['error' => 'Block not found']);
             return;
         }
 
-        // Build the update query dynamically based on provided fields
+        // Prepare fields
         $updateFields = [];
         $params = [];
 
@@ -344,7 +454,7 @@ function updateBlock($id, $path)
 
         if (isset($data['json_data'])) {
             $updateFields[] = "json_data = ?";
-            $params[] = json_encode($data['json_data']);
+            $params[] = json_encode($data['json_data'], JSON_UNESCAPED_UNICODE);
         }
 
         if (empty($updateFields)) {
@@ -355,10 +465,31 @@ function updateBlock($id, $path)
 
         // Add id to params
         $params[] = $id;
+        $updateStmt = $conn->prepare("UPDATE `$tableName` SET " . implode(", ", $updateFields) . " WHERE id = ?");
+        $updateStmt->execute($params);
+
+        // ? Mark config as not deployed
+        $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
+        $resetDeployStmt->execute([$fileName]);
+
 
         // Update block
         $updateStmt = $conn->prepare("UPDATE `$tableName` SET " . implode(", ", $updateFields) . " WHERE id = ?");
         $updateStmt->execute($params);
+
+        // Log history
+
+        $oldText = '{ "directive" : "' . $existing['title'] . '"}';
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            $oldText,
+            $data['comment'] ?? 'Updated block title',
+            'update',
+            $tableName,
+            $id,
+            implode(',', array_keys($data)),
+        );
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -371,11 +502,17 @@ function updateBlock($id, $path)
     }
 }
 
+
 // Delete a block
 function deleteBlock($id, $path)
 {
     try {
         $conn = getDbConnection();
+
+        // Get optional comment from request body (if any)
+        $jsonRaw = file_get_contents('php://input');
+        $data = json_decode($jsonRaw, true) ?? [];
+        $comment = $data['comment'] ?? ($_GET['comment'] ?? 'Deleted block');
 
         // Get file from index
         $stmt = $conn->prepare('SELECT file_name FROM config_file_index WHERE file_name = ?');
@@ -402,11 +539,12 @@ function deleteBlock($id, $path)
             return;
         }
 
-        // Check if the record exists
-        $checkRecordStmt = $conn->prepare("SELECT id FROM `$tableName` WHERE id = ?");
-        $checkRecordStmt->execute([$id]);
+        // Fetch block to preserve data for history
+        $fetchStmt = $conn->prepare("SELECT title, json_data FROM `$tableName` WHERE id = ?");
+        $fetchStmt->execute([$id]);
+        $block = $fetchStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($checkRecordStmt->rowCount() === 0) {
+        if (!$block) {
             http_response_code(404);
             echo json_encode(['error' => 'Block not found']);
             return;
@@ -415,6 +553,24 @@ function deleteBlock($id, $path)
         // Delete block
         $deleteStmt = $conn->prepare("DELETE FROM `$tableName` WHERE id = ?");
         $deleteStmt->execute([$id]);
+
+        // Build oldText
+        $oldText = $block['json_data'];
+
+        // Add history (using keys from existing block)
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            $oldText,
+            $comment,
+            'delete',
+            $tableName,
+            $id,
+            'title,json_data'
+        );
+        // ? Mark config as not deployed
+        $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
+        $resetDeployStmt->execute([$fileName]);
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -426,6 +582,8 @@ function deleteBlock($id, $path)
         echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
 }
+
+
 
 function getJsonData($path, $id = null)
 {
@@ -507,8 +665,7 @@ function updateJsonData()
 
         $path = $data['path'];
         $id = $data['id'];
-        //$jsonContent = $data['data'];
-        $jsonContent = json_encode(parseNginxBlock($data['data']));
+        $jsonContent = json_encode(parseNginxBlock($data['data']), JSON_UNESCAPED_UNICODE);
 
         // Extract filename and derive table name   
         $fileName = basename($path);
@@ -524,19 +681,37 @@ function updateJsonData()
             return;
         }
 
-        // Check if record exists
-        $checkRecordStmt = $conn->prepare("SELECT id FROM `$tableName` WHERE id = ?");
+        // Check if record exists and fetch old json_data
+        $checkRecordStmt = $conn->prepare("SELECT json_data FROM `$tableName` WHERE id = ?");
         $checkRecordStmt->execute([$id]);
+        $existing = $checkRecordStmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($checkRecordStmt->rowCount() === 0) {
+        if (!$existing) {
             http_response_code(404);
             echo json_encode(['error' => 'Block not found']);
             return;
         }
 
+        $oldText = $existing['json_data'];
+
         // Update json_data
         $updateStmt = $conn->prepare("UPDATE `$tableName` SET json_data = ? WHERE id = ?");
         $updateStmt->execute([$jsonContent, $id]);
+
+        // Add history row
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            $oldText,
+            $data['comment'] ?? 'Updated JSON data',
+            'update',
+            $tableName,
+            $id,
+            'json_data'
+        );
+        // ? Mark config as not deployed
+        $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
+        $resetDeployStmt->execute([$fileName]);
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'message' => 'JSON data updated successfully']);
@@ -545,6 +720,7 @@ function updateJsonData()
         echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
 }
+
 
 function parseNginxBlock($configText)
 {
@@ -652,4 +828,301 @@ function parseNginxBlock($configText)
     }
 
     return null;
+}
+
+function giveHistory()
+{
+    try {
+        $conn = getDbConnection();
+
+        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+
+        $stmt = $conn->prepare("SELECT * FROM history_Nginx ORDER BY id DESC LIMIT :limit OFFSET :offset");
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $results]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+function searchHistory($searchQuery)
+{
+    try {
+        $conn = getDbConnection();
+
+        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+
+        // Sanitize input
+        $cleanQuery = trim(preg_replace('/[^a-zA-Z0-9\s\-_:@.]/', ' ', $searchQuery));
+        $cleanQuery = preg_replace('/\s+/', ' ', $cleanQuery);
+        $keywords = array_slice(explode(' ', $cleanQuery), 0, 10);
+
+        $conditions = [];
+        $params = [];
+
+        foreach ($keywords as $index => $word) {
+            $kwParam = ":kw$index";
+            $likePattern = '%' . $word . '%';
+
+            $conditions[] = "(editor_name LIKE $kwParam
+                OR editor_gmail LIKE $kwParam
+                OR old_text LIKE $kwParam
+                OR comment LIKE $kwParam
+                OR action LIKE $kwParam
+                OR table_edited LIKE $kwParam
+                OR column_title LIKE $kwParam)";
+            $params[$kwParam] = $likePattern;
+
+            if (ctype_digit($word)) {
+                $numParam = ":num$index";
+                $conditions[] = "(id = $numParam OR table_row_id = $numParam)";
+                $params[$numParam] = intval($word);
+            }
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}/', $word)) {
+                $dtParam = ":dt$index";
+                $conditions[] = "DATE(edit_datetime) = $dtParam";
+                $params[$dtParam] = $word;
+            }
+        }
+
+        $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        $sql = "
+            SELECT * FROM history_Nginx
+            $whereClause
+            ORDER BY edit_datetime DESC
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $stmt = $conn->prepare($sql);
+
+        foreach ($params as $param => $value) {
+            $stmt->bindValue($param, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $results]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+
+
+
+function parseDirective(array $data, int $indent = 0): string
+{
+    $indentStr = str_repeat('  ', $indent);
+    $result = '';
+
+    if (empty($data))
+        return '';
+
+    if (isset($data['directive'])) {
+        $result .= $indentStr . $data['directive'];
+        if (!empty($data['args'])) {
+            $result .= ' ' . implode(' ', $data['args']);
+        }
+    }
+
+    if (!empty($data['block'])) {
+        if (isset($data['directive']))
+            $result .= ' ';
+        $result .= "{\n";
+        foreach ($data['block'] as $item) {
+            $child = parseDirective($item, $indent + 1);
+            if (trim($child) !== '')
+                $result .= $child . "\n";
+        }
+        $result .= $indentStr . '}';
+    } elseif (isset($data['directive'])) {
+        $result .= ';';
+    }
+
+    return $result;
+}
+
+function sendFiles($input)
+{
+    if (!isset($input['files']) || !is_array($input['files'])) {
+        http_response_code(400);
+        echo json_encode(["error" => "Missing or invalid 'files' key"]);
+        exit;
+    }
+
+    $filenames = array_map('trim', $input['files']);
+    $conn = getDbConnection();
+    $results = [];
+
+    foreach ($filenames as $file) {
+        $tableName = 'cfg_' . strtolower(pathinfo($file, PATHINFO_FILENAME));
+        try {
+            $sql = "SELECT * FROM `$tableName`";
+            $stmt = $conn->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $parsedConfigs = [];
+            foreach ($rows as $row) {
+                if (!empty($row['json_data'])) {
+                    $json = json_decode($row['json_data'], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $parsed = parseDirective($json);
+                        if (!empty($parsed)) {
+                            $parsedConfigs[] = $parsed;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($parsedConfigs)) {
+                $results[] = [
+                    'filename' => $file,
+                    'config' => implode("\n\n", $parsedConfigs)
+                ];
+            }
+            //echo json_encode($parsedConfigs, true);
+        } catch (Exception $e) {
+            // Skip table if it doesn't exist or has error
+            echo "file error";
+            continue;
+        }
+
+
+    }
+
+    // Send parsed data to backend
+    $ch = curl_init("http://127.0.0.1:8081/push");
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["data" => $results, "command" => $input['command']]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Content-Type: application/json"
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    echo json_encode([
+        "success" => true,
+        "httpCode" => $httpCode,
+        "response" => $response
+    ]);
+}
+
+function sendServerList()
+{
+    $url = 'http://127.0.0.1:8081/serverList';
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+    $response = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        echo "Curl error: " . curl_error($ch) . "\n";
+        curl_close($ch);
+        return;
+    }
+
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode !== 200) {
+        echo "Request failed with HTTP code $httpCode\n";
+        return;
+    }
+
+    echo $response;
+}
+
+function sendPartialFilesServer($input)
+{
+    if (
+        !isset($input['files']) || !is_array($input['files']) ||
+        !isset($input['servers']) || !is_array($input['servers']) ||
+        !isset($input['command'])
+    ) {
+        http_response_code(400);
+        echo json_encode(["error" => "Missing 'files', 'servers', or 'command'"]);
+        exit;
+    }
+
+    $filenames = array_map('trim', $input['files']);
+    $targetServers = array_map('trim', $input['servers']);
+    $command = $input['command'];
+
+    $conn = getDbConnection();
+    $results = [];
+
+    foreach ($filenames as $file) {
+        $tableName = 'cfg_' . strtolower(pathinfo($file, PATHINFO_FILENAME));
+        try {
+            $sql = "SELECT * FROM `$tableName`";
+            $stmt = $conn->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $parsedConfigs = [];
+            foreach ($rows as $row) {
+                if (!empty($row['json_data'])) {
+                    $json = json_decode($row['json_data'], true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $parsed = parseDirective($json);
+                        if (!empty($parsed)) {
+                            $parsedConfigs[] = $parsed;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($parsedConfigs)) {
+                $results[] = [
+                    'filename' => $file,
+                    'config' => implode("\n\n", $parsedConfigs)
+                ];
+            }
+        } catch (Exception $e) {
+            // Skip on error (e.g. missing table)
+            continue;
+        }
+    }
+
+    $payload = [
+        'data' => $results,
+        'command' => $command,
+        'targets' => $targetServers
+    ];
+
+    $ch = curl_init("http://127.0.0.1:8081/push");
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Content-Type: application/json"
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    echo json_encode([
+        "success" => true,
+        "httpCode" => $httpCode,
+        "response" => $response
+    ]);
 }

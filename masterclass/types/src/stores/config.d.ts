@@ -27,8 +27,7 @@ export declare const useConfigStore: import("pinia").StoreDefinition<"config", P
     isModified: (fileName: string) => boolean;
     loadConfigs: () => Promise<void>;
     markModified: (fileName: string) => void;
-    deployChanges: () => Promise<void>;
-}, "error" | "loading" | "configs" | "modifiedFiles" | "deploying" | "showDeployStatus" | "deploySuccess" | "deployMessage">, Pick<{
+}, "error" | "configs" | "modifiedFiles" | "loading" | "deploying" | "showDeployStatus" | "deploySuccess" | "deployMessage">, Pick<{
     configs: import("vue").Ref<{
         file_name: string;
         status: string;
@@ -51,7 +50,6 @@ export declare const useConfigStore: import("pinia").StoreDefinition<"config", P
     isModified: (fileName: string) => boolean;
     loadConfigs: () => Promise<void>;
     markModified: (fileName: string) => void;
-    deployChanges: () => Promise<void>;
 }, "pendingCount">, Pick<{
     configs: import("vue").Ref<{
         file_name: string;
@@ -75,6 +73,5 @@ export declare const useConfigStore: import("pinia").StoreDefinition<"config", P
     isModified: (fileName: string) => boolean;
     loadConfigs: () => Promise<void>;
     markModified: (fileName: string) => void;
-    deployChanges: () => Promise<void>;
-}, "isModified" | "loadConfigs" | "markModified" | "deployChanges">>;
+}, "isModified" | "loadConfigs" | "markModified">>;
 export {};

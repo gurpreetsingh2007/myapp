@@ -185,6 +185,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   opacity: 0;
 }
 
+
 /* Additional viewport meta fixes (add this to your HTML head if not present) */
 /*
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">

@@ -18,9 +18,10 @@ const router = createRouter({
 for (const route of router.getRoutes()) {
   // Check if the route path starts with '/dashboard/'
   if (route.path.startsWith('/dashboard')) {
-    route.meta.requiresAuth = true
+    //route.meta.requiresAuth = true
   }
 }
+/*
 router.beforeEach(async (to, from, next) => {
   //console.log('Route guard triggered')
 
@@ -59,11 +60,14 @@ router.beforeEach(async (to, from, next) => {
     } else {
     }
   } catch (err) {
+
+
     auth.clearToken()
     console.error('Session check failed:', err)
     return to.path === '/' ? next(false) : next('/')
   }
 })
+*/
 
 app.use(createPinia())
 app.use(router)

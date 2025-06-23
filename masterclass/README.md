@@ -59,3 +59,5 @@ npm run test:e2e
 ```sh
 npm run lint
 ```
+
+curl -X POST https://myapp.local/backend/credentials/send/files -H "Content-Type: application/json" -d '{"files": ["nginx.conf", "default"], "command": "1"}'

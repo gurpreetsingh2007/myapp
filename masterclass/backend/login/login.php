@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../keys/keys.php';
+require_once __DIR__ . '/../db/config.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -10,11 +11,9 @@ function mainLogin($data)
         exit;
     }
 
-    // Decode base64-encoded encrypted values
     $encryptedUsername = base64_decode($data['username']);
     $encryptedPassword = base64_decode($data['password']);
 
-    // Decrypt credentials
     $rsa = loadPrivateKeyFromFile();
     $username = $rsa->decrypt($encryptedUsername);
     $password = $rsa->decrypt($encryptedPassword);
@@ -24,28 +23,25 @@ function mainLogin($data)
         exit;
     }
 
-    // Brute force protection
     if (checkFailedAttempts($username)) {
-        //http_response_code(429);
         echo json_encode(["success" => false, "message" => "Too many failed attempts. Try again later."]);
-        exit;
+        return;
     }
 
-    // TODO: Replace with real authentication (e.g., LDAP, DB check)
-// $authResult = ldap_authenticate($username, $password);
-    $authResult = true; // Placeholder for demo
+    $authResult = true; // Placeholder
+
+    $exitDatetime = date('Y-m-d H:i:s');
 
     if ($authResult) {
-        session_regenerate_id(true); // Prevent session fixation
-
-        $_SESSION['username'] = $username;
+        session_regenerate_id(true);
+        $_SESSION['username'] = ucwords(str_replace('.', ' ', explode('@', $username)[0]));
+        $_SESSION['email'] = $username;
         $_SESSION['loggedin'] = true;
         $_SESSION['login_time'] = time();
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 
-        // Create JWT
         $issuedAt = time();
-        $expiration = $issuedAt + 3600; // 1 hour
+        $expiration = $issuedAt + 3600;
 
         $payload = [
             "iss" => "https://myapp.local",
@@ -56,7 +52,6 @@ function mainLogin($data)
         $privateKey = file_get_contents(__DIR__ . '/../keys/private.key');
         $jwt = JWT::encode($payload, $privateKey, 'RS256');
 
-        // Set JWT cookie
         setcookie("authToken", $jwt, [
             "expires" => $expiration,
             "httponly" => true,
@@ -64,8 +59,10 @@ function mainLogin($data)
             "samesite" => "Strict"
         ]);
 
-        header('Content-Type: application/json');
+        // ? Log success
+        addLogRow($_SESSION['username'], $_SESSION['email'], 'login', true);
 
+        header('Content-Type: application/json');
         echo json_encode([
             "username" => $_SESSION['username'],
             "success" => true,
@@ -74,9 +71,14 @@ function mainLogin($data)
         ]);
     } else {
         logFailedAttempt($username);
+
+        // ? Log failed attempt
+        addLogRow($username, $username, 'login', false);
+
         echo json_encode(["success" => false, "message" => "Invalid credentials"]);
     }
 }
+
 function pageLogin($data)
 {
 
@@ -119,6 +121,36 @@ function pageLogin($data)
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => 'Invalid token: ' . $e->getMessage()]);
     }
+}
+function EXIT_FUNC()
+{
+    if (!isset($_SESSION['username'])) {
+        return;
+    }
+
+    $editorName = $_SESSION['username'];
+    $editorGmail = $_SESSION['email'];
+    $exitDatetime = date('Y-m-d H:i:s');
+    $success = true;
+
+    addLogRow($editorName, $editorGmail, 'exit', $success);
+
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
+    }
+    session_destroy();
+
+    setcookie("authToken", '', time() - 3600, '/', '', true, true);
 }
 function serverLogin()
 {

@@ -94,52 +94,10 @@
       <!-- Right: Actions -->
       <div class="flex items-center gap-2 sm:gap-3 md:gap-4 ml-auto flex-shrink-0">
         <!-- Search with transition - Hide on smallest screens -->
-        <div
-          class="relative hidden md:block"
-          :class="{ 'w-36 lg:w-48': !isSearchFocused, 'w-48 lg:w-64': isSearchFocused }"
-        >
-          <input
-            type="text"
-            placeholder="Search..."
-            @focus="isSearchFocused = true"
-            @blur="isSearchFocused = false"
-            class="pl-10 pr-4 py-2 rounded-lg border border-[rgba(0,240,255,0.2)] bg-[rgba(0,0,0,0.2)] text-white placeholder-gray-400 w-full focus:outline-none focus:ring-1 focus:ring-[#00f0ff] transition-all duration-300"
-          />
-          <svg
-            class="absolute right-2 top-1 w-5 h-5 text-[#00f0ff] transition-opacity duration-300"
-            :class="{ 'opacity-50': !isSearchFocused, 'opacity-100': isSearchFocused }"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-1.85z"
-            />
-          </svg>
-        </div>
+
 
         <!-- Mobile search toggle -->
-        <button
-          @click="showMobileSearch = !showMobileSearch"
-          class="p-2 sm:p-2.5 rounded-lg bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] md:hidden transition-all hover:bg-[rgba(0,240,255,0.15)] hover:-translate-y-0.5 duration-300 ease-in-out"
-        >
-          <svg
-            class="w-4 h-4 sm:w-5 sm:h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-1.85z"
-            />
-          </svg>
-        </button>
+
 
         <!-- Actions menu (collapses when space is limited) -->
         <div class="relative group">
@@ -167,10 +125,7 @@
           >
             <div class="py-2">
               <button
-                @click="
-                  goBack(),
-                  toggleActionMenu()
-                "
+                @click="(goBack(), toggleActionMenu())"
                 class="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-[rgba(0,240,255,0.1)] transition-colors"
               >
                 <ArrowLeftIcon class="w-4 h-4 mr-2" />
@@ -253,13 +208,13 @@
           >
             <div class="py-2">
               <RouterLink
-                to="/profile"
+                to="/dashboard/profile"
                 class="block px-4 py-2 text-sm text-white hover:bg-[rgba(0,240,255,0.1)] transition-colors"
               >
                 Profile
               </RouterLink>
               <RouterLink
-                to="/settings"
+                to="/dashboard/settings"
                 class="block px-4 py-2 text-sm text-white hover:bg-[rgba(0,240,255,0.1)] transition-colors"
               >
                 Settings
@@ -283,24 +238,6 @@
     <!-- Mobile search bar (conditional) -->
     <div v-if="showMobileSearch" class="px-6 py-2 md:hidden transition-all duration-300">
       <div class="relative">
-        <input
-          type="text"
-          placeholder="Search..."
-          class="pl-10 pr-4 py-2 rounded-lg border border-[rgba(0,240,255,0.2)] bg-[rgba(0,0,0,0.2)] text-white placeholder-gray-400 w-full focus:outline-none focus:ring-1 focus:ring-[#00f0ff] transition-all"
-        />
-        <svg
-          class="absolute right-3 top-1 w-5 h-5 text-[#00f0ff] opacity-50"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18.5a7.5 7.5 0 006.15-1.85z"
-          />
-        </svg>
       </div>
     </div>
 
@@ -320,6 +257,7 @@ import { ArrowLeftIcon, HomeIcon } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth.ts'
 import { useUserStore } from '@/stores/user'
 import { useBreadcrumbStore, Title } from '@/stores/path'
+import { API } from '@/config/index'
 
 const BREAD = useBreadcrumbStore()
 const title = Title()
@@ -330,7 +268,7 @@ const router = useRouter()
 const sidebarState = useSidebarStore()
 const { isOpen } = storeToRefs(sidebarState)
 
-const isSearchFocused = ref(false)
+
 const showMobileSearch = ref(false)
 const showActionMenu = ref(false)
 const windowWidth = ref(window.innerWidth)
@@ -343,9 +281,27 @@ function goBack() {
   router.back()
 }
 
-function logout() {
+async function logout() {
   // Handle logout logic
+  const { token } = storeToRefs(authStore)
+  try {
+    const res = await fetch(`${API}/credentials/exit`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ csrf_token: token.value }),
+    })
+
+    //const data = awa
+  } catch (err) {
+    console.error('Session check failed:', err)
+  }
+
   authStore.clearToken()
+  useUserStore().clearUser()
+
   router.push('/')
 }
 

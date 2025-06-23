@@ -31,7 +31,7 @@ export default defineConfig({
     },
     proxy: {
       '/backend': {
-        target: 'https://172.18.90.196',
+        target: 'https://172.18.90.167',
         changeOrigin: true,
         secure: false,
         //rewrite: (path) => path.replace(/^\/api/, ''),

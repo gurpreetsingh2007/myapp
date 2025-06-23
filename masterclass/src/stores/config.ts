@@ -37,6 +37,13 @@ export const useConfigStore = defineStore('config', () => {
       const data = await res.json()
       if (!data.success) throw new Error('Failed to load configurations')
       configs.value = data.message
+
+      data.message.forEach((config: { file_name: string; deployed: string }) => {
+      if (config.deployed === 'n') {
+        markModified(config.file_name)
+      }
+      })
+
     } catch (err) {
       error.value = (err as Error).message
     } finally {
@@ -48,32 +55,7 @@ export const useConfigStore = defineStore('config', () => {
     modifiedFiles.value.add(fileName)
   }
 
-  async function deployChanges() {
-    if (!modifiedFiles.value.size) return
 
-    deploying.value = true
-    showDeployStatus.value = true
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Update statuses for modified files
-      configs.value = configs.value.map((config) => ({
-        ...config,
-        status: modifiedFiles.value.has(config.file_name) ? 'ok' : config.status,
-      }))
-
-      deploySuccess.value = true
-      deployMessage.value = `Successfully deployed ${modifiedFiles.value.size} file(s).`
-      modifiedFiles.value.clear()
-    } catch (err) {
-      deploySuccess.value = false
-      deployMessage.value = (err as Error).message || 'Deployment failed'
-    } finally {
-      deploying.value = false
-    }
-  }
 
   return {
     configs,
@@ -87,7 +69,6 @@ export const useConfigStore = defineStore('config', () => {
     pendingCount,
     isModified,
     loadConfigs,
-    markModified,
-    deployChanges,
+    markModified
   }
 })

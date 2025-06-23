@@ -1,23 +1,27 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { API } from '@/config/index'
+import { useConfigStore } from '@/stores/config'
+
 interface JsonDataType {
   id?: string
   json_data?: string
   success?: boolean
-  // other fields...
 }
+
 export const useJsonDataStore = defineStore('jsonData', () => {
-  // State
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  const jsonData = ref<JsonDataType>({})
 
-  // Getters
+  const jsonData = reactive<JsonDataType>({
+    id: '',
+    json_data: '',
+    success: false,
+  })
+
   const hasError = computed(() => error.value !== null)
-  const isDataLoaded = computed(() => jsonData.value !== null)
+  const isDataLoaded = computed(() => !!jsonData.id)
 
-  // Helper for fetch with error handling
   async function fetchWithHandling(url: string, options = {}) {
     const response = await fetch(url, options)
     const contentType = response.headers.get('content-type')
@@ -35,11 +39,13 @@ export const useJsonDataStore = defineStore('jsonData', () => {
   async function fetchJsonData(path: string, id: string) {
     isLoading.value = true
     error.value = null
+
     if (!id) {
       isLoading.value = false
-      jsonData.value.success = false
+      jsonData.success = false
       return ''
     }
+
     const url = new URL(`${API}/credentials/get/json`)
     url.searchParams.append('path', encodeURIComponent(path))
     url.searchParams.append('id', id)
@@ -52,12 +58,10 @@ export const useJsonDataStore = defineStore('jsonData', () => {
         },
       })
 
-      jsonData.value = data
-
+      Object.assign(jsonData, data)
       return data
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unknown error'
-
       throw err
     } finally {
       isLoading.value = false
@@ -80,10 +84,10 @@ export const useJsonDataStore = defineStore('jsonData', () => {
         },
         body: JSON.stringify({ path, id, data }),
       })
-
+      useConfigStore().markModified(path)
       return response
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'unknow shit'
+      error.value = err instanceof Error ? err.message : 'Unknown error'
       throw err
     } finally {
       isLoading.value = false
@@ -91,16 +95,11 @@ export const useJsonDataStore = defineStore('jsonData', () => {
   }
 
   return {
-    // State
     isLoading,
     error,
     jsonData,
-
-    // Getters
     hasError,
     isDataLoaded,
-
-    // Actions
     fetchJsonData,
     updateJsonData,
   }

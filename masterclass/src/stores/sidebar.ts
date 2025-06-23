@@ -1,4 +1,3 @@
-import type { RefSymbol } from '@vue/reactivity'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
