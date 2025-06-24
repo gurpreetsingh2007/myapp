@@ -188,7 +188,7 @@ import {
   ChartBarIcon,
   ServerIcon,
 } from '@heroicons/vue/24/outline'
-import { Terminal, Code, Database } from 'lucide-vue-next'
+import { Terminal, Code, Database, HardDriveUpload  } from 'lucide-vue-next'
 import { useSidebarStore } from '@/stores/sidebar'
 import { storeToRefs } from 'pinia'
 const sidebarState = useSidebarStore()
@@ -223,6 +223,7 @@ const iconMap = {
   nginx: Terminal,
   php: Code,
   MariDb: Database,
+  rsnapshot: HardDriveUpload,
 } as const
 
 type IconKey = keyof typeof iconMap
@@ -245,12 +246,12 @@ const menuItems = reactive<MenuItem[]>([
   {
     title: 'Services',
     icon: 'servers',
-    path: '/dashboard/servers',
     active: false,
     isDropdown: true,
     open: false,
     children: [
       { title: 'NGINX', path: '/dashboard/nginx', icon: 'nginx', active: false },
+      { title: 'RSNAPSHOT', path: '/dashboard/rsnapshot', icon: 'rsnapshot', active: false },
       { title: 'PHP-FPM', path: '/dashboard/phpfpm', icon: 'php', active: false },
       { title: 'MariDb', path: '/dashboard/MariDb', icon: 'MariDb', active: false },
     ],

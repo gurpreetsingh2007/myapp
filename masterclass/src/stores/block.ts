@@ -104,3 +104,225 @@ export const useJsonDataStore = defineStore('jsonData', () => {
     updateJsonData,
   }
 })
+/** Types for each block */
+interface GeneralItem {
+  id: number
+  directive: string
+  args: string[]
+}
+
+interface BackupItem {
+  id: number
+  directive: string
+  source: string
+  dest: string
+  parameters: Array<{ name: string; value: string }>
+}
+type UpdatePayload = (GeneralPayload | BackupPayload) & { comment?: string }
+
+interface UpdateResponse {
+  success: boolean
+  message: string
+}
+export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+
+  const rsnapshotData = reactive<{
+    general: GeneralItem[]
+    backups: BackupItem[]
+  }>({
+    general: [],
+    backups: [],
+  })
+
+  const hasError = computed(() => error.value !== null)
+  const isDataLoaded = computed(
+    () => rsnapshotData.general.length > 0 || rsnapshotData.backups.length > 0,
+  )
+
+  /** shared fetch wrapper */
+  async function fetchWithHandling(url: string, options: RequestInit = {}) {
+    const res = await fetch(url, options)
+    const isJson = res.headers.get('content-type')?.includes('application/json')
+    const data = isJson ? await res.json() : null
+
+    if (!res.ok) {
+      const msg = (data as any)?.error || res.statusText
+      throw new Error(msg)
+    }
+    return data
+  }
+
+  /** Load the full rsnapshot config */
+  async function fetchRsnapshotData() {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const url = `${API}/credentials/get/rsnapshotData`
+      const data = await fetchWithHandling(url, { method: 'GET' })
+
+      rsnapshotData.general = data.general ?? []
+      rsnapshotData.backups = data.backup ?? []
+      return data
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Create a new GENERAL entry
+   */
+  async function createGeneralItem(newItem: { directive: string; args: string[] }) {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API}/credentials/post/rsnapshotData`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'general',
+          directive: newItem.directive,
+          args: newItem.args,
+          comment: 'Created new general item',
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create general item')
+      }
+
+      // Refresh the list
+      await fetchRsnapshotData()
+      useConfigStore().markModified('rsnapshot.conf')
+      return result
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+  /**
+   * Delete one entry by ID.
+   */
+  async function deleteRsnapshotData(
+    id: number,
+    comment = 'Deleted rsnapshot entry',
+  ): Promise<UpdateResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const url = `${API}/credentials/delete/rsnapshotData`
+      const body = JSON.stringify({ id, comment })
+
+      const resData = (await fetchWithHandling(url, {
+        method: 'DELETE', // or 'DELETE' if your endpoint supports it
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })) as UpdateResponse
+
+      // refresh the config list
+      await fetchRsnapshotData()
+      useConfigStore().markModified('rsnapshot.conf')
+
+      return resData
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Create a new BACKUP entry
+   */
+  async function createBackupItem(newItem: {
+    directive: string
+    source: string
+    dest: string
+    parameters: Array<{ name: string; value: string }>
+  }) {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${API}/credentials/post/rsnapshotData`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'backup',
+          directive: newItem.directive,
+          source: newItem.source,
+          dest: newItem.dest,
+          parameters: newItem.parameters,
+          comment: 'Created new backup item',
+        }),
+      })
+
+      const result = await response.json()
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create backup item')
+      }
+
+      await fetchRsnapshotData()
+      useConfigStore().markModified('rsnapshot.conf')
+      return result
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
+   * Update one entry by ID.
+   */
+  async function updateRsnapshotData(id: number, payload: UpdatePayload): Promise<UpdateResponse> {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const url = `${API}/credentials/update/rsnapshotData`
+      const body = JSON.stringify({ id, ...payload })
+
+      const resData = (await fetchWithHandling(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })) as UpdateResponse
+
+      // mark config dirty so UI knows to re-deploy
+      useConfigStore().markModified('rsnapshot.conf')
+
+      return resData
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  return {
+    isLoading,
+    error,
+    rsnapshotData,
+    hasError,
+    isDataLoaded,
+    fetchRsnapshotData,
+    createGeneralItem,
+    createBackupItem,
+    updateRsnapshotData,
+    deleteRsnapshotData,
+  }
+})

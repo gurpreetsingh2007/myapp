@@ -1,0 +1,279 @@
+{
+  "general": [
+    {
+      "directive": "config_version",
+      "args": ["1.2"]
+    },
+    {
+      "directive": "snapshot_root",
+      "args": ["/storage/rsnapshot/"]
+    },
+    {
+      "directive": "cmd_cp",
+      "args": ["/bin/cp"]
+    },
+    {
+      "directive": "cmd_rm",
+      "args": ["/bin/rm"]
+    },
+    {
+      "directive": "cmd_rsync",
+      "args": ["/usr/bin/rsync"]
+    },
+    {
+      "directive": "cmd_ssh",
+      "args": ["/usr/bin/ssh"]
+    },
+    {
+      "directive": "cmd_logger",
+      "args": ["/usr/bin/logger"]
+    },
+    {
+      "directive": "cmd_du",
+      "args": ["/usr/bin/du"]
+    },
+    {
+      "directive": "cmd_rsnapshot_diff",
+      "args": ["/usr/bin/rsnapshot-diff"]
+    },
+    {
+      "directive": "interval",
+      "args": ["daily", "7"]
+    },
+    {
+      "directive": "interval",
+      "args": ["weekly", "4"]
+    },
+    {
+      "directive": "interval",
+      "args": ["monthly", "6"]
+    },
+    {
+      "directive": "verbose",
+      "args": ["1"]
+    },
+    {
+      "directive": "loglevel",
+      "args": ["4"]
+    },
+    {
+      "directive": "logfile",
+      "args": ["/var/log/rsnapshot.log"]
+    },
+    {
+      "directive": "lockfile",
+      "args": ["/var/run/rsnapshot.pid"]
+    },
+    {
+      "directive": "rsync_long_args",
+      "args": ["--delete", "--numeric-ids", "--relative", "--delete-excluded", "--preallocate"]
+    }
+  ],
+  "backup": [
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@172.18.91.10/root/",
+      "dest": "lxmail/",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--exclude-from=/storage/config/lxmail/exclude.rsync --password-file=/storage/config/lxmail/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@172.16.0.4/root/",
+      "dest": "sg-jessie",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/sg-jessie/filter.rsync' --password-file=/storage/config/sg-jessie/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxphp/root/",
+      "dest": "lxphp",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxphp/filter.rsync' --password-file=/storage/config/lxphp/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@gitlab:/",
+      "dest": "gitlab",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/gitlab/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxponti/root/",
+      "dest": "lxponti",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxponti/filter.rsync' --password-file=/storage/config/lxponti/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "/mnt/shares/w2016pdc/fileserver/",
+      "dest": "w2016pdc/",
+      "parameters": []
+    },
+    {
+      "directive": "backup",
+      "source": "/mnt/shares/wottima/",
+      "dest": "wottima/",
+      "parameters": []
+    },
+    {
+      "directive": "backup",
+      "source": "/mnt/shares/dim-proxy/",
+      "dest": "dim-proxy/",
+      "parameters": []
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxphp74/root/",
+      "dest": "lxphp74",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxphp74/filter.rsync' --password-file=/storage/config/lxphp74/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@azure.hyperdroid.it/root/",
+      "dest": "hyperdroid",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/hyperdroid/filter.rsync' --password-file=/storage/config/hyperdroid/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxhyperpi/root/",
+      "dest": "lxhyperpi",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxhyperpi/filter.rsync' --password-file=/storage/config/lxhyperpi/password.rsync"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@nginx-g5:/",
+      "dest": "nginx-g5",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/nginx-g5/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@nginx-g6:/",
+      "dest": "nginx-g6",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/nginx-g6/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@nginx-g8:/",
+      "dest": "nginx-g8",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/nginx-g8/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@lxtest1:/",
+      "dest": "lxtest1",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxtest1/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@lxtest2:/",
+      "dest": "lxtest2",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxtest2/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "root@lxmaria:/",
+      "dest": "lxmaria",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxmaria/filter.rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxmon/backup",
+      "dest": "lxmon",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxmon/filter.rsync' --password-file=/storage/config/lxmon/password.rsync --rsync-path='sudo rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxmdbp1/backup",
+      "dest": "lxmdbp1",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxmdbp1/filter.rsync' --password-file=/storage/config/lxmdbp1/password.rsync --rsync-path='sudo rsync'"
+        }
+      ]
+    },
+    {
+      "directive": "backup",
+      "source": "rsync://sg-bkp@lxphp83p1/backup",
+      "dest": "lxphp83p1",
+      "parameters": [
+        {
+          "name": "+rsync_long_args",
+          "value": "--filter='merge /storage/config/lxphp83p1/filter.rsync' --password-file=/storage/config/lxphp83p1/password.rsync --rsync-path='sudo rsync'"
+        }
+      ]
+    }
+  ]
+}

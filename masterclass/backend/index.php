@@ -20,7 +20,7 @@ register_shutdown_function(function () {
 });
 require 'vendor/autoload.php';
 require_once 'keys/keys.php';
-require_once 'login/login.php'; 
+require_once 'login/login.php';
 require_once 'db/config.php';
 
 set_time_limit(0);
@@ -78,6 +78,7 @@ try {
         loadDataJson();
         createHistoryTable();
         createLogTable();
+        loadDataJsonRsnapshot();
         exit;
     }
     if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/history") {
@@ -143,6 +144,35 @@ try {
         updateJsonData();
         exit;
     }
+    ////////////////////////// searchbar 
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/search") {
+        searchKeyword($_GET['q'] ?? '');
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/parameters") {
+        //searchKeyword($_GET['q'] ?? '');
+        exit;
+    }
+
+
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/rsnapshotData") {
+        sendRsnapshot();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/post/rsnapshotData") {
+        addRsnapshot();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "DELETE" && $cleanEndpoint === "/credentials/delete/rsnapshotData") {
+        deleteRsnapshot();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/update/rsnapshotData") {
+        updateRsnapshot();
+        exit;
+    }
+
 
 
 
@@ -151,11 +181,11 @@ try {
         sendFiles(json_decode(file_get_contents("php://input"), true));
         exit;
     }
-    if($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/server_list"){
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/server_list") {
         sendServerList();
         exit;
     }
-    if($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/send/partialFilesServer"){
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/send/partialFilesServer") {
         sendPartialFilesServer(json_decode(file_get_contents("php://input"), true));
         exit;
     }

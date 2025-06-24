@@ -27,6 +27,7 @@ declare module 'vue-router/auto-routes' {
     '/dashboard/Nginx': RouteRecordInfo<'/dashboard/Nginx', '/dashboard/Nginx', Record<never, never>, Record<never, never>>,
     '/dashboard/profile': RouteRecordInfo<'/dashboard/profile', '/dashboard/profile', Record<never, never>, Record<never, never>>,
     '/dashboard/profile/': RouteRecordInfo<'/dashboard/profile/', '/dashboard/profile', Record<never, never>, Record<never, never>>,
+    '/dashboard/rsnapshot': RouteRecordInfo<'/dashboard/rsnapshot', '/dashboard/rsnapshot', Record<never, never>, Record<never, never>>,
     '/dashboard/servers': RouteRecordInfo<'/dashboard/servers', '/dashboard/servers', Record<never, never>, Record<never, never>>,
     '/dashboard/settings': RouteRecordInfo<'/dashboard/settings', '/dashboard/settings', Record<never, never>, Record<never, never>>,
   }

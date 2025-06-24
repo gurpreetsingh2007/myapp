@@ -358,7 +358,7 @@ function createBlock($path)
         }
 
         // Create empty JSON object for json_data if not provided
-        $jsonData = isset($data['json_data']) ? json_encode($data['json_data']) : '{}';
+        $jsonData = json_encode(parseNginxBlock($data['json_data']), JSON_UNESCAPED_UNICODE);
 
         // Insert new block
         $insertStmt = $conn->prepare("INSERT INTO `$tableName` (title, json_data) VALUES (?, ?)");
@@ -925,7 +925,103 @@ function searchHistory($searchQuery)
 }
 
 
+// nigger lavora
+function searchKeyword($searchQuery)
+{
+    try {
+        $conn = getDbConnection();
 
+        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+
+        // Sanitize input
+        $cleanQuery = trim(preg_replace('/[^a-zA-Z0-9\s\-_:@.\/]/', ' ', $searchQuery));
+        $cleanQuery = preg_replace('/\s+/', ' ', $cleanQuery);
+        $keywords = array_slice(explode(' ', $cleanQuery), 0, 10);
+
+        $conditions = [];
+        $params = [];
+
+        foreach ($keywords as $i => $word) {
+            $param = ":kw$i";
+            $conditions[] = "(path LIKE $param OR note LIKE $param OR service LIKE $param)";
+            $params[$param] = '%' . $word . '%';
+        }
+
+        $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        $sql = "
+            SELECT id, service, username, note, path
+            FROM cfg_reverse_proxy
+            $whereClause
+            ORDER BY id DESC
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $stmt = $conn->prepare($sql);
+
+        foreach ($params as $param => $value) {
+            $stmt->bindValue($param, $value);
+        }
+
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $results]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/backend/credentials/get/search") {
+    header('Content-Type: application/json');
+
+    try {
+        $conn = getDbConnection();
+
+        $path = $_GET['path'] ?? '';
+        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+
+        if (empty($path)) {
+            echo json_encode(['success' => false, 'error' => 'Missing "path" parameter']);
+            exit;
+        }
+
+        // Sanitize
+        $safePath = '%' . trim(preg_replace('/[^a-zA-Z0-9\-_\/:.]/', '', $path)) . '%';
+
+        $sql = "
+            SELECT id, service, username, note, path
+            FROM credentials
+            WHERE path LIKE :path
+            ORDER BY id DESC
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bindValue(':path', $safePath, PDO::PARAM_STR);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(['success' => true, 'data' => $results]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
+
+    exit;
+}
 
 function parseDirective(array $data, int $indent = 0): string
 {
@@ -1125,4 +1221,369 @@ function sendPartialFilesServer($input)
         "httpCode" => $httpCode,
         "response" => $response
     ]);
+}
+
+#rsnapshot; 
+
+function createRsnapshotTable(): void
+{
+    $pdo = getDbConnection();
+    $sql = "CREATE TABLE IF NOT EXISTS cfg_rsnapshot (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type ENUM('general', 'backup') NOT NULL,
+        directive VARCHAR(50) NOT NULL,
+        args JSON NULL,
+        source TEXT NULL,
+        dest TEXT NULL,
+        parameters JSON NULL
+    )";
+    $pdo->exec($sql);
+}
+
+function loadDataJsonRsnapshot(): void
+{
+    $jsonPath = __DIR__ . '/../data/rsnapshot.json';
+    $pdo = getDbConnection();
+    // Read and decode JSON file
+    $jsonData = file_get_contents($jsonPath);
+    $data = json_decode($jsonData, true);
+
+    // Create table if not exists
+    createRsnapshotTable();
+
+    // Prepare insert statement
+    $stmt = $pdo->prepare("
+        INSERT INTO cfg_rsnapshot (type, directive, args, source, dest, parameters)
+        VALUES (:type, :directive, :args, :source, :dest, :parameters)
+    ");
+
+    // Process general block
+    foreach ($data['general'] as $item) {
+        $stmt->execute([
+            ':type' => 'general',
+            ':directive' => $item['directive'],
+            ':args' => json_encode($item['args']),
+            ':source' => null,
+            ':dest' => null,
+            ':parameters' => null
+        ]);
+    }
+
+    // Process backup block
+    foreach ($data['backup'] as $item) {
+        $stmt->execute([
+            ':type' => 'backup',
+            ':directive' => $item['directive'],
+            ':args' => null,
+            ':source' => $item['source'],
+            ':dest' => $item['dest'],
+            ':parameters' => json_encode($item['parameters'])
+        ]);
+    }
+}
+
+
+/**
+ * Send the entire rsnapshot configuration as JSON, grouped by type.
+ */
+function sendRsnapshot()
+{
+    try {
+        $pdo = getDbConnection();
+        $stmt = $pdo->query("SELECT * FROM cfg_rsnapshot ORDER BY type, id");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $output = [
+            'general' => [],
+            'backup' => []
+        ];
+
+        foreach ($rows as $row) {
+            $item = [
+                'id' => (int) $row['id'],
+                'directive' => $row['directive'],
+            ];
+            if ($row['type'] === 'general') {
+                $item['args'] = $row['args'] ? json_decode($row['args'], true) : [];
+                $output['general'][] = $item;
+            } else {
+                // backup
+                $item['source'] = $row['source'];
+                $item['dest'] = $row['dest'];
+                $item['parameters'] = $row['parameters'] ? json_decode($row['parameters'], true) : [];
+                $output['backup'][] = $item;
+            }
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($output, JSON_UNESCAPED_UNICODE);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+
+/**
+ * Update a single rsnapshot entry.
+ * Expected JSON payload:
+ * {
+ *   "id": 123,
+ *   "directive": "backup",
+ *   "args": ["..."],            // for general entries
+ *   "source": "rsync://...",
+ *   "dest": "lxmail/",
+ *   "parameters": { ... },      // assoc array of extra params
+ *   "comment": "why you changed"
+ * }
+ */
+
+function updateRsnapshot()
+{
+    try {
+        $pdo = getDbConnection();
+
+        // Read and parse incoming JSON
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (empty($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required field: id']);
+            return;
+        }
+        $id = (int) $data['id'];
+
+        // Fetch existing row
+        $fetch = $pdo->prepare("SELECT * FROM cfg_rsnapshot WHERE id = ?");
+        $fetch->execute([$id]);
+        $old = $fetch->fetch(PDO::FETCH_ASSOC);
+        if (!$old) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Record not found']);
+            return;
+        }
+
+        // Build update clause dynamically  
+        $fields = [];
+        $params = [];
+
+        if (isset($data['directive'])) {
+            $fields[] = 'directive = :directive';
+            $params[':directive'] = $data['directive'];
+        }
+        if (isset($data['args'])) {
+            $fields[] = 'args = :args';
+            $params[':args'] = json_encode($data['args'], JSON_UNESCAPED_UNICODE);
+        }
+        if (isset($data['source'])) {
+            $fields[] = 'source = :source';
+            $params[':source'] = $data['source'];
+        }
+        if (isset($data['dest'])) {
+            $fields[] = 'dest = :dest';
+            $params[':dest'] = $data['dest'];
+        }
+        if (isset($data['parameters'])) {
+            $fields[] = 'parameters = :parameters';
+            $params[':parameters'] = json_encode($data['parameters'], JSON_UNESCAPED_UNICODE);
+        }
+
+        if (empty($fields)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'No updatable fields provided']);
+            return;
+        }
+
+        $params[':id'] = $id;
+        $sql = "UPDATE cfg_rsnapshot SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        // Record history
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            json_encode($old, JSON_UNESCAPED_UNICODE),
+            $data['comment'] ?? 'Updated rsnapshot entry',
+            'update',
+            'cfg_rsnapshot',
+            $id,
+            implode(', ', array_map(function ($f) {
+                return trim(explode('=', $f)[0]);
+            }, $fields))
+        );
+
+        // Mark config as not deployed
+        $reset = $pdo->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = 'rsnapshot.conf'");
+        $reset->execute();
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Record updated']);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+/**
+ * Insert a new rsnapshot entry.
+ * Expected JSON payload:
+ * {
+ *   "type": "general"|"backup",
+ *   "directive": "snapshot_root"|"backup"|…,
+ *   // if type="general":
+ *   "args": ["val1", "val2", …],
+ *   // if type="backup":
+ *   "source": "rsync://…",
+ *   "dest": "path/",
+ *   "parameters": { "param1": "value1", … },
+ *   "comment": "why you created this"
+ * }
+ */
+function addRsnapshot()
+{
+    try {
+        $pdo = getDbConnection();
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        // Validate required fields
+        if (empty($data['type']) || empty($data['directive'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required field: type or directive']);
+            return;
+        }
+
+        // Prepare columns and values
+        $columns = ['type', 'directive'];
+        $placeholders = [':type', ':directive'];
+        $params = [
+            ':type' => $data['type'],
+            ':directive' => $data['directive']
+        ];
+
+        // Handle general vs. backup specifics
+        if ($data['type'] === 'general') {
+            $columns[] = 'args';
+            $placeholders[] = ':args';
+            $params[':args'] = isset($data['args'])
+                ? json_encode($data['args'], JSON_UNESCAPED_UNICODE)
+                : json_encode([], JSON_UNESCAPED_UNICODE);
+        } else {
+            // backup
+            $columns = array_merge($columns, ['source', 'dest', 'parameters']);
+            $placeholders = array_merge($placeholders, [':source', ':dest', ':parameters']);
+            $params[':source'] = $data['source'] ?? null;
+            $params[':dest'] = $data['dest'] ?? null;
+            $params[':parameters'] = isset($data['parameters'])
+                ? json_encode($data['parameters'], JSON_UNESCAPED_UNICODE)
+                : json_encode([], JSON_UNESCAPED_UNICODE);
+        }
+
+        // Build and execute INSERT
+        $sql = sprintf(
+            "INSERT INTO cfg_rsnapshot (%s) VALUES (%s)",
+            implode(', ', $columns),
+            implode(', ', $placeholders)
+        );
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        // Get new ID
+        $newId = (int) $pdo->lastInsertId();
+
+        // Record creation in history (old_text empty)
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            '',                              // no old data
+            $data['comment'] ?? 'Created new rsnapshot entry',
+            'create',
+            'cfg_rsnapshot',
+            $newId,
+            implode(', ', $columns)
+        );
+
+        // Mark config as not deployed
+        $reset = $pdo->prepare("
+            UPDATE config_file_index 
+               SET deployed = 'n' 
+             WHERE file_name = 'rsnapshot.conf'
+        ");
+        $reset->execute();
+
+        // Return success
+        header('Content-Type: application/json');
+        http_response_code(201);
+        echo json_encode([
+            'success' => true,
+            'id' => $newId,
+            'message' => 'New rsnapshot entry created'
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function deleteRsnapshot()
+{
+    try {
+        $pdo = getDbConnection();
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        // Validate required ID
+        if (empty($data['id'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required field: id']);
+            return;
+        }
+        $id = (int) $data['id'];
+
+        // Fetch existing row
+        $stmt = $pdo->prepare("SELECT * FROM cfg_rsnapshot WHERE id = ?");
+        $stmt->execute([$id]);
+        $old = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$old) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Record not found']);
+            return;
+        }
+
+        // Delete the row
+        $del = $pdo->prepare("DELETE FROM cfg_rsnapshot WHERE id = ?");
+        $del->execute([$id]);
+
+        // Record deletion in history (old text is JSON of the old row)
+        addHistoryRow(
+            $_SESSION['username'] ?? 'Unknown',
+            $_SESSION['email'] ?? 'unknown@example.com',
+            json_encode($old, JSON_UNESCAPED_UNICODE),
+            $data['comment'] ?? 'Deleted rsnapshot entry',
+            'delete',
+            'cfg_rsnapshot',
+            $id,
+            implode(', ', array_keys($old))
+        );
+
+        // Mark config as not deployed
+        $reset = $pdo->prepare("
+            UPDATE config_file_index 
+               SET deployed = 'n' 
+             WHERE file_name = 'rsnapshot.conf'
+        ");
+        $reset->execute();
+
+        // Return success
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Record deleted'
+        ]);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    }
 }

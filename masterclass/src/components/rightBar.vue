@@ -4,11 +4,8 @@
 
     <!-- Backdrop (mobile only) -->
     <Transition name="fade">
-      <div
-        v-if="sidebar.isOpen && isMobile"
-        @click="toggleSidebar"
-        class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
-      ></div>
+      <div v-if="sidebar.isOpen && isMobile" @click="toggleSidebar"
+        class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"></div>
     </Transition>
 
     <!-- Sidebar -->
@@ -17,27 +14,19 @@
       :class="{
         'w-80': sidebar.isOpen,
         'w-0': !sidebar.isOpen,
-      }"
-    >
+      }">
       <div
-        class="relative px-6 py-5 border-b border-[rgba(0,240,255,0.08)] h-16 flex items-center justify-center overflow-hidden flex-shrink-0"
-      >
+        class="relative px-6 py-5 border-b border-[rgba(0,240,255,0.08)] h-16 flex items-center justify-center overflow-hidden flex-shrink-0">
         <!-- Background pulse layer -->
-        <div
-          class="absolute inset-0 bg-[rgba(0,240,255,0.02)] animate-pulse-slow pointer-events-none z-0"
-        ></div>
+        <div class="absolute inset-0 bg-[rgba(0,240,255,0.02)] animate-pulse-slow pointer-events-none z-0"></div>
 
         <!-- Centered content group -->
         <div class="relative z-10 flex items-center gap-4">
           <!-- Title -->
           <Transition name="slide-fade">
-            <h2
-              v-if="sidebar.isOpen"
-              class="text-xl font-semibold text-[var(--text-color)] tracking-tight"
-            >
+            <h2 v-if="sidebar.isOpen" class="text-xl font-semibold text-[var(--text-color)] tracking-tight">
               <span
-                class="bg-gradient-to-r from-[#00f0ff] via-[#a200ff] to-[#d000ff] bg-clip-text text-transparent animate-gradient-shift bg-300%"
-              >
+                class="bg-gradient-to-r from-[#00f0ff] via-[#a200ff] to-[#d000ff] bg-clip-text text-transparent animate-gradient-shift bg-300%">
                 Blocks
               </span>
             </h2>
@@ -45,18 +34,10 @@
 
           <!-- Add New Block Button -->
           <Transition name="slide-fade">
-            <button
-              v-if="sidebar.isOpen"
-              @click="openNewBlockDialog"
-              class="flex items-center justify-center p-2 rounded-full bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] transition-all duration-300 hover:bg-[rgba(0,240,255,0.15)] hover:scale-110"
-            >
+            <button v-if="sidebar.isOpen" @click="openNewBlockDialog"
+              class="flex items-center justify-center p-2 rounded-full bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] transition-all duration-300 hover:bg-[rgba(0,240,255,0.15)] hover:scale-110">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 4v16m8-8H4"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
             </button>
           </Transition>
@@ -64,138 +45,100 @@
       </div>
 
       <!-- Content - Scrollable Area -->
-      <div
-        ref="scrollRef"
-        class="flex-grow overflow-y-auto bg-cover bg-center"
+      <div ref="scrollRef" class="flex-grow overflow-y-auto bg-cover bg-center"
         :class="{ 'opacity-100': sidebar.isOpen, 'opacity-0': !sidebar.isOpen }"
-        :style="{ backgroundImage: `url(${sidebar.backgroundImageUrl})` }"
-      >
+        :style="{ backgroundImage: `url(${sidebar.backgroundImageUrl})` }">
 
         <div class="p-6">
           <!-- Loading state -->
           <div v-if="loading" class="flex justify-center items-center h-40">
             <div
-              class="w-12 h-12 rounded-sm border-4 border-t-[#00f0ff] border-r-[#a200ff] border-b-[#d000ff] border-l-transparent animate-spin"
-            ></div>
+              class="w-12 h-12 rounded-sm border-4 border-t-[#00f0ff] border-r-[#a200ff] border-b-[#d000ff] border-l-transparent animate-spin">
+            </div>
           </div>
 
           <!-- Error state -->
-          <div
-            v-else-if="error"
-            class="p-4 bg-[rgba(255,0,0,0.1)] rounded-lg border border-[rgba(255,0,0,0.2)] text-red-400"
-          >
+          <div v-else-if="error"
+            class="p-4 bg-[rgba(255,0,0,0.1)] rounded-lg border border-[rgba(255,0,0,0.2)] text-red-400">
             {{ error }}
           </div>
 
           <!-- Config Items -->
           <div v-else class="grid grid-cols-1 gap-4">
-            <div
-              v-for="row in configRows"
-              :key="row.id"
-              class="group relative top-1 p-5 rounded-xl bg-[rgba(0,0,0,0.4)] backdrop-blur-sm border border-[rgba(0,240,255,0.1)] hover:border-[rgba(0,240,255,0.3)] transition-all duration-300 cursor-pointer text-[var(--text-color)] hover:-translate-y-1"
-            >
+            <div class="mb-4">
+              <input v-model="searchQuery" type="text" placeholder="Search by title or ID..."
+                class="w-full px-4 py-2 rounded-xl border border-[rgba(0,240,255,0.2)] bg-[rgba(0,0,0,0.4)] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00f0ff55] focus:border-[#00f0ff] transition" />
+            </div>
+            <div v-for="row in filteredRows" :key="row.id"
+              class="group relative top-1 p-5 mb-1 rounded-xl bg-[rgba(0,0,0,0.4)] backdrop-blur-sm border border-[rgba(0,240,255,0.1)] hover:border-[rgba(0,240,255,0.3)] transition-all duration-300 cursor-pointer text-[var(--text-color)] hover:-translate-y-1">
               <!-- Background glow effect -->
               <div
-                class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-[rgba(0,240,255,0.05)] to-[rgba(208,0,255,0.05)] z-0"
-              ></div>
+                class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-[rgba(0,240,255,0.05)] to-[rgba(208,0,255,0.05)] z-0">
+              </div>
 
               <!-- Enhanced Three Dots Menu -->
               <div class="absolute top-4 right-3 z-[999]">
                 <div class="relative">
                   <!-- Menu Trigger Button -->
-                  <button
-                    @click.stop="toggleMenu(row.id)"
+                  <button @click.stop="toggleMenu(row.id)"
                     class="p-1.5 rounded-lg transition-all duration-300 hover:bg-[rgba(0,240,255,0.1)] group/trigger"
-                    :class="{ 'bg-[rgba(0,240,255,0.1)]': activeMenu === row.id }"
-                  >
+                    :class="{ 'bg-[rgba(0,240,255,0.1)]': activeMenu === row.id }">
                     <div class="relative">
                       <!-- Animated background circle -->
                       <div
-                        class="absolute inset-0 rounded-lg bg-[#00f0ff] opacity-0 group-hover/trigger:opacity-10 transition-opacity duration-300"
-                      ></div>
+                        class="absolute inset-0 rounded-lg bg-[#00f0ff] opacity-0 group-hover/trigger:opacity-10 transition-opacity duration-300">
+                      </div>
                       <!-- Dots icon -->
 
-                      <svg
-                        class="w-6 h-6 text-[#00f0ff] transform transition-transform duration-300 hover:scale-110"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg class="w-6 h-6 text-[#00f0ff] transform transition-transform duration-300 hover:scale-110"
+                        fill="currentColor" viewBox="0 0 24 24">
                         <path
-                          d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
-                        />
+                          d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
                       </svg>
                     </div>
                   </button>
 
                   <!-- Enhanced Dropdown Menu -->
-                  <transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    enter-from-class="opacity-0 translate-y-1"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 translate-y-1"
-                  >
-                    <div
-                      v-if="activeMenu === row.id"
-                      class="absolute right-8 top-3 mt- w-40 origin-top-right z-[9999] overflow: !visible !important"
-                    >
+                  <transition enter-active-class="transition-all duration-200 ease-out"
+                    leave-active-class="transition-all duration-150 ease-in" enter-from-class="opacity-0 translate-y-1"
+                    enter-to-class="opacity-100 translate-y-0" leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 translate-y-1">
+                    <div v-if="activeMenu === row.id"
+                      class="absolute right-8 top-3 mt- w-40 origin-top-right z-[9999] overflow: !visible !important">
                       <div
-                        class="relative border border-[rgba(0,240,255,0.3)] rounded-xl bg-[rgba(12,12,12,0.95)] backdrop-blur-lg shadow-2xl shadow-[rgba(0,240,255,0.1)] overflow-hidden"
-                      >
+                        class="relative border border-[rgba(0,240,255,0.3)] rounded-xl bg-[rgba(12,12,12,0.95)] backdrop-blur-lg shadow-2xl shadow-[rgba(0,240,255,0.1)] overflow-hidden">
                         <!-- Animated border glow -->
                         <div
-                          class="absolute inset-0 rounded-xl border-2 border-[rgba(0,240,255,0.1)] pointer-events-none animate-pulse-slow"
-                        ></div>
+                          class="absolute inset-0 rounded-xl border-2 border-[rgba(0,240,255,0.1)] pointer-events-none animate-pulse-slow">
+                        </div>
 
                         <!-- Menu Items -->
                         <div class="space-y-1 p-1.5">
-                          <button
-                            @click.stop="editBlock(row)"
-                            class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm text-[var(--text-color)] hover:bg-[rgba(0,240,255,0.1)] transition-all duration-300 group/edit"
-                          >
+                          <button @click.stop="editBlock(row)"
+                            class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm text-[var(--text-color)] hover:bg-[rgba(0,240,255,0.1)] transition-all duration-300 group/edit">
                             <div class="mr-3 relative">
-                              <svg
-                                class="w-5 h-5 text-[#00f0ff] group-hover/edit:animate-pulse"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="1.5"
-                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                />
+                              <svg class="w-5 h-5 text-[#00f0ff] group-hover/edit:animate-pulse" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
                             </div>
                             <span>Edit Block</span>
                           </button>
 
-                          <button
-                            @click.stop="deleteBlock(row.id)"
-                            class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm text-red-300 hover:bg-[rgba(255,0,0,0.1)] transition-all duration-300 group/delete"
-                          >
+                          <button @click.stop="deleteBlock(row.id)"
+                            class="flex items-center w-full px-4 py-2.5 rounded-lg text-sm text-red-300 hover:bg-[rgba(255,0,0,0.1)] transition-all duration-300 group/delete">
                             <div class="mr-3 relative">
-                              <svg
-                                class="w-5 h-5 text-red-400 group-hover/delete:animate-pulse"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="1.5"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
+                              <svg class="w-5 h-5 text-red-400 group-hover/delete:animate-pulse" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </div>
                             <span class="relative">
                               Delete
                               <span
-                                class="absolute bottom-0 left-0 w-full h-px bg-red-400 scale-x-0 group-hover/delete:scale-x-100 transition-transform duration-300"
-                              ></span>
+                                class="absolute bottom-0 left-0 w-full h-px bg-red-400 scale-x-0 group-hover/delete:scale-x-100 transition-transform duration-300"></span>
                             </span>
                           </button>
                         </div>
@@ -206,42 +149,36 @@
               </div>
 
               <!-- Button content -->
-              <div
-                @click="
-                  navigateTo(
-                    `/dashboard/config?block_id=${path.info.service}&section_id=${encodeURIComponent(path.info.sectionId)}&store_id=${row.title}&store_number=${row.id}`,
-                  )
-                "
-                class="relative z-10 flex flex-col items-center top-0.5 space-y-3"
-              >
-                <div
-                  class="bg-[rgba(0,0,0,0.6)] rounded-md px-3 py-1 border border-[rgba(0,240,255,0.2)]"
-                >
+              <div @click="
+                navigateTo(
+                  `/dashboard/config?block_id=${path.info.service}&section_id=${encodeURIComponent(path.info.sectionId)}&store_id=${row.title}&store_number=${row.id}`,
+                )
+                " class="relative z-10 flex flex-col items-center top-0.5 space-y-3">
+                <div class="bg-[rgba(0,0,0,0.6)] rounded-md px-3 py-1 border border-[rgba(0,240,255,0.2)]">
                   <span
-                    class="text-md font-bold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
-                  >
+                    class="text-md font-bold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent">
                     #{{ row.id }}
                   </span>
                 </div>
                 <span class="text-lg  font-small tracking-wide text-center">{{ row.title }}</span>
                 <div
-                  class="h-0.5 w-10 mt-2 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 bg-gradient-to-r from-[#00f0ff] to-[#d000ff]"
-                ></div>
+                  class="h-0.5 w-10 mt-2 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 bg-gradient-to-r from-[#00f0ff] to-[#d000ff]">
+                </div>
               </div>
 
               <!-- Animated corner decorations -->
               <div
-                class="absolute top-0 left-0 w-3 h-3 border-t border-l border-[#00f0ff] rounded-tl-lg animate-pulse-slow"
-              ></div>
+                class="absolute top-0 left-0 w-3 h-3 border-t border-l border-[#00f0ff] rounded-tl-lg animate-pulse-slow">
+              </div>
               <div
-                class="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#d000ff] rounded-tr-lg animate-pulse-slow"
-              ></div>
+                class="absolute top-0 right-0 w-3 h-3 border-t border-r border-[#d000ff] rounded-tr-lg animate-pulse-slow">
+              </div>
               <div
-                class="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#d000ff] rounded-bl-lg animate-pulse-slow"
-              ></div>
+                class="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-[#d000ff] rounded-bl-lg animate-pulse-slow">
+              </div>
               <div
-                class="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#00f0ff] rounded-br-lg animate-pulse-slow"
-              ></div>
+                class="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-[#00f0ff] rounded-br-lg animate-pulse-slow">
+              </div>
             </div>
           </div>
         </div>
@@ -249,21 +186,17 @@
     </aside>
   </div>
 
-  <!-- Enhanced New Block Dialog -->
   <Transition name="dialog">
     <div v-if="showNewBlockDialog" class="fixed inset-0 z-[100] flex items-center justify-center">
-      <div
-        class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity"
-        @click="showNewBlockDialog = false"
-      ></div>
-      <div
-        class="relative z-10 bg-gradient-to-br from-[rgba(12,12,12,0.95)] to-[rgba(20,20,20,0.98)] border border-[rgba(0,240,255,0.3)] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-[rgba(0,240,255,0.15)] transform transition-all"
-      >
+      <div class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity"
+        @click="showNewBlockDialog = false"></div>
+      <div v-if="editMode"
+        class="relative z-10 bg-gradient-to-br from-[rgba(12,12,12,0.95)] to-[rgba(20,20,20,0.98)] border border-[rgba(0,240,255,0.3)] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-[rgba(0,240,255,0.15)] transform transition-all">
         <!-- Animated border gradient -->
         <div class="absolute inset-0 rounded-2xl pointer-events-none">
           <div
-            class="absolute -inset-1 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] rounded-2xl blur-lg opacity-30 animate-pulse-slow"
-          ></div>
+            class="absolute -inset-1 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] rounded-2xl blur-lg opacity-30 animate-pulse-slow">
+          </div>
         </div>
 
         <!-- Noise texture overlay -->
@@ -274,64 +207,224 @@
             {{ editMode ? 'Edit Block' : 'Create New Block' }}
           </span>
           <div
-            class="h-[2px] mt-1 bg-gradient-to-r from-[#00f0ff] to-[#d000ff] w-20 rounded-full animate-gradient-shift"
-          ></div>
+            class="h-[2px] mt-1 bg-gradient-to-r from-[#00f0ff] to-[#d000ff] w-20 rounded-full animate-gradient-shift">
+          </div>
         </h3>
 
         <div class="space-y-6">
           <div>
-            <label for="blockTitle" class="block text-sm font-medium text-[#00f0ff] mb-2"
-              >Title</label
-            >
+            <label for="blockTitle" class="block text-sm font-medium text-[#00f0ff] mb-2">Title</label>
             <div class="relative">
-              <input
-                type="text"
-                id="blockTitle"
-                v-model="newBlockTitle"
+              <input type="text" id="blockTitle" v-model="newBlockTitle"
                 class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-[var(--text-color)] focus:outline-none focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff55] placeholder-gray-500 transition-all duration-300"
-                placeholder="Enter block title"
-              />
-              <div
-                class="absolute inset-0 rounded-xl border border-[#00f0ff33] pointer-events-none"
-              ></div>
+                placeholder="Enter block title" />
+              <div class="absolute inset-0 rounded-xl border border-[#00f0ff33] pointer-events-none"></div>
             </div>
           </div>
 
           <div class="flex justify-end space-x-4 mt-8">
-            <button
-              @click="showNewBlockDialog = false"
-              class="px-5 py-2.5 rounded-xl border-2 border-[rgba(0,240,255,0.3)] bg-[rgba(0,0,0,0.4)] text-[#00f0ff] hover:bg-[rgba(0,240,255,0.1)] hover:border-[#00f0ff] hover:scale-[1.02] transition-all duration-300 flex items-center"
-            >
+            <button @click="showNewBlockDialog = false"
+              class="px-5 py-2.5 rounded-xl border-2 border-[rgba(0,240,255,0.3)] bg-[rgba(0,0,0,0.4)] text-[#00f0ff] hover:bg-[rgba(0,240,255,0.1)] hover:border-[#00f0ff] hover:scale-[1.02] transition-all duration-300 flex items-center">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
               Cancel
             </button>
-            <button
-              @click="saveBlock"
-              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#d000ff] text-black font-semibold hover:shadow-[0_0_15px_-3px_rgba(0,240,255,0.5)] hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group"
-            >
+            <button @click="saveBlock"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#d000ff] text-black font-semibold hover:shadow-[0_0_15px_-3px_rgba(0,240,255,0.5)] hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group">
               <div
-                class="absolute inset-0 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              ></div>
+                class="absolute inset-0 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              </div>
               <span class="relative z-10 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 {{ editMode ? 'Update' : 'Create' }}
               </span>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Noise texture overlay -->
+      <div class="absolute inset-0 rounded-2xl bg-noise opacity-10 pointer-events-none"></div>
+
+      <div class="relative z-10 ...">
+        <!-- ... existing dialog header ... -->
+
+        <!-- Setup Wizard -->
+        <div v-if="showSetupWizard && !editMode" class="space-y-6">
+          <!-- Step Navigation -->
+          <div class="flex justify-between items-center mb-6">
+            <button v-if="currentStep > 1" @click="prevStep"
+              class="px-4 py-2 rounded-lg bg-[rgba(0,240,255,0.1)] text-[#00f0ff] flex items-center">
+              <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+            <div class="flex-grow text-center">
+              <span class="text-[#00f0ff]">Step {{ currentStep }} of {{ totalSteps }}</span>
+              <h3 class="text-xl font-bold text-white">{{ stepTitles[currentStep - 1] }}</h3>
+            </div>
+            <div v-if="currentStep === 1" class="w-24"></div> <!-- Spacer -->
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="h-2 bg-[rgba(0,240,255,0.1)] rounded-full mb-6">
+            <div class="h-full bg-gradient-to-r from-[#00f0ff] to-[#d000ff] rounded-full transition-all duration-500"
+              :style="{ width: `${(currentStep / totalSteps) * 100}%` }"></div>
+          </div>
+
+          <!-- Step 1: Server Info -->
+          <div v-if="currentStep === 1" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-[#00f0ff] mb-2">Server Name</label>
+              <input v-model="serverConfig.serverName"
+                class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                placeholder="example.com" />
+            </div>
+
+
+          </div>
+
+          <!-- Step 2: SSL Configuration -->
+          <div v-if="currentStep === 2" class="space-y-4">
+            <div class="flex items-center">
+              <input type="checkbox" v-model="serverConfig.enableSSL" id="enableSSL"
+                class="mr-3 h-5 w-5 text-[#00f0ff] rounded focus:ring-[#00f0ff]" />
+              <label for="enableSSL" class="text-white">Enable SSL/TLS</label>
+            </div>
+
+            <div v-if="serverConfig.enableSSL" class="space-y-4 pl-8 border-l border-[rgba(0,240,255,0.2)]">
+              <div>
+                <label class="block text-sm font-medium text-[#00f0ff] mb-2">SSL Listen Port</label>
+                <input v-model="serverConfig.sslPort" type="number"
+                  class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                  placeholder="443" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-[#00f0ff] mb-2">Certificate Path</label>
+                <input v-model="serverConfig.certificatePath"
+                  class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                  placeholder="/etc/ssl/certs/example.crt" />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-[#00f0ff] mb-2">Private Key Path</label>
+                <input v-model="serverConfig.privateKeyPath"
+                  class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                  placeholder="/etc/ssl/private/example.key" />
+              </div>
+            </div>
+            <div v-else>
+              <div>
+                <label class="block text-sm font-medium text-[#00f0ff] mb-2">Listen Port</label>
+                <input v-model="serverConfig.sslPort" type="number"
+                  class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                  placeholder="80" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Proxy Locations -->
+          <div v-if="currentStep === 3" class="space-y-6">
+            <div v-for="(location, index) in serverConfig.locations" :key="index"
+              class="bg-[rgba(0,0,0,0.3)] p-4 rounded-xl border border-[rgba(0,240,255,0.2)]">
+              <div class="flex justify-between items-center mb-3">
+                <h4 class="text-[#00f0ff] font-medium">Location #{{ index + 1 }}</h4>
+                <button v-if="serverConfig.locations.length > 1" @click="removeLocation(index)"
+                  class="text-red-400 hover:text-red-300">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-[#00f0ff] mb-2">Path</label>
+                  <input v-model="location.path"
+                    class="w-full bg-[rgba(0,0,0,0.6)] border border-[rgba(0,240,255,0.2)] rounded-lg px-3 py-2 text-white"
+                    placeholder="/" />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-[#00f0ff] mb-2">Proxy Pass</label>
+                  <input v-model="location.proxyPass"
+                    class="w-full bg-[rgba(0,0,0,0.6)] border border-[rgba(0,240,255,0.2)] rounded-lg px-3 py-2 text-white"
+                    placeholder="http://localhost:3000" />
+                </div>
+              </div>
+            </div>
+
+            <button @click="addLocation"
+              class="flex items-center justify-center w-full py-3 border-2 border-dashed border-[rgba(0,240,255,0.3)] rounded-xl text-[#00f0ff] hover:bg-[rgba(0,240,255,0.1)]">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Location
+            </button>
+          </div>
+
+          <!-- Step 4: Additional Options -->
+          <div v-if="currentStep === 4" class="space-y-4">
+            <div class="flex items-center">
+              <input type="checkbox" v-model="serverConfig.redirectHttpToHttps" id="redirectHttp"
+                class="mr-3 h-5 w-5 text-[#00f0ff] rounded focus:ring-[#00f0ff]" />
+              <label for="redirectHttp" class="text-white">Redirect HTTP to HTTPS</label>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-[#00f0ff] mb-2">Custom Directives</label>
+              <textarea v-model="serverConfig.customDirectives"
+                class="w-full h-32 bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                placeholder="Add any custom Nginx directives..."></textarea>
+            </div>
+          </div>
+
+          <!-- Step 5: Review & Generate -->
+          <div v-if="currentStep === 5" class="space-y-6">
+            <div class="p-4 bg-[rgba(0,0,0,0.4)] rounded-xl border border-[rgba(0,240,255,0.2)]">
+              <h4 class="text-[#00f0ff] mb-3 font-medium">Generated Nginx Configuration</h4>
+              <pre
+                class="cyberpunk-pre text-sm text-gray-300 overflow-auto  p-3 bg-black/50 rounded-lg">{{ generatedConfig }}</pre>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-[#00f0ff] mb-2">Block Title</label>
+              <input v-model="newBlockTitle"
+                class="w-full bg-[rgba(0,0,0,0.6)] border-2 border-[rgba(0,240,255,0.3)] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00f0ff]"
+                placeholder="Enter block title" />
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="flex justify-between pt-6">
+            <button v-if="currentStep > 1" @click="prevStep"
+              class="px-5 py-2.5 rounded-xl border-2 border-[rgba(0,240,255,0.3)] bg-[rgba(0,0,0,0.4)] text-[#00f0ff] hover:bg-[rgba(0,240,255,0.1)]">
+              Back
+            </button>
+
+            <div class="flex-grow"></div>
+
+            <button v-if="currentStep < totalSteps" @click="nextStep"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#d000ff] text-black font-semibold">
+              Next
+            </button>
+
+            <button v-if="currentStep === totalSteps" @click="saveReverseProxyBlock"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#00f0ff] to-[#d000ff] text-black font-semibold">
+              Save Block
+            </button>
+          </div>
+        </div>
+
+        <!-- Existing Simple Block Creation -->
+        <div v-else class="space-y-6">
+          <!-- ... existing simple block creation form ... -->
         </div>
       </div>
     </div>
@@ -340,67 +433,45 @@
   <!-- Enhanced Delete Confirmation Dialog -->
   <Transition name="dialog">
     <div v-if="showDeleteDialog" class="fixed inset-0 z-[100] flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity" @click="showDeleteDialog = false">
+      </div>
       <div
-        class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity"
-        @click="showDeleteDialog = false"
-      ></div>
-      <div
-        class="relative z-10 bg-gradient-to-br from-[rgba(20,0,0,0.95)] to-[rgba(30,0,0,0.98)] border border-[rgba(255,0,0,0.3)] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-[rgba(255,0,0,0.15)] transform transition-all"
-      >
+        class="relative z-10 bg-gradient-to-br from-[rgba(20,0,0,0.95)] to-[rgba(30,0,0,0.98)] border border-[rgba(255,0,0,0.3)] rounded-2xl w-full max-w-md p-8 shadow-2xl shadow-[rgba(255,0,0,0.15)] transform transition-all">
         <!-- Danger pulse effect -->
         <div class="absolute inset-0 rounded-2xl pointer-events-none">
           <div
-            class="absolute -inset-1 bg-gradient-to-r from-[#ff000055] to-[#ff006655] rounded-2xl blur-lg opacity-30 animate-pulse"
-          ></div>
+            class="absolute -inset-1 bg-gradient-to-r from-[#ff000055] to-[#ff006655] rounded-2xl blur-lg opacity-30 animate-pulse">
+          </div>
         </div>
 
         <div class="text-center">
           <div class="mb-5 inline-block p-4 bg-red-900/30 rounded-full">
-            <svg
-              class="w-12 h-12 text-red-400 animate-pulse"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
+            <svg class="w-12 h-12 text-red-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
 
           <h3 class="text-2xl font-bold text-red-400 mb-3">Confirm Deletion</h3>
           <p class="text-red-200/90 mb-6 px-4 leading-relaxed">
             Are you sure you want to delete this block?<br />
-            <span class="text-red-300 font-medium"
-              >This action can be undone from the history!</span
-            >
+            <span class="text-red-300 font-medium">This action can be undone from the history!</span>
           </p>
 
           <div class="flex justify-center space-x-4">
-            <button
-              @click="showDeleteDialog = false"
-              class="px-5 py-2.5 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-[rgba(0,0,0,0.4)] text-red-100 hover:bg-[rgba(255,255,255,0.05)] hover:scale-[1.02] transition-all duration-300"
-            >
+            <button @click="showDeleteDialog = false"
+              class="px-5 py-2.5 rounded-xl border-2 border-[rgba(255,255,255,0.2)] bg-[rgba(0,0,0,0.4)] text-red-100 hover:bg-[rgba(255,255,255,0.05)] hover:scale-[1.02] transition-all duration-300">
               Cancel
             </button>
-            <button
-              @click="confirmDelete"
-              class="px-5 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-pink-600 text-white font-semibold hover:shadow-[0_0_15px_-3px_rgba(255,0,0,0.5)] hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group"
-            >
+            <button @click="confirmDelete"
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-br from-red-600 to-pink-600 text-white font-semibold hover:shadow-[0_0_15px_-3px_rgba(255,0,0,0.5)] hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group">
               <div
-                class="absolute inset-0 bg-gradient-to-br from-red-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              ></div>
+                class="absolute inset-0 bg-gradient-to-br from-red-700 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              </div>
               <span class="relative z-10 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Delete
               </span>
@@ -413,15 +484,315 @@
 </template>
 
 <script setup lang="ts">
+/*
+
+*/
 import { ref, onMounted, computed, onBeforeMount, onBeforeUnmount, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Path } from '@/stores/path'
 import { API } from '@/config/index'
 import { useRightSidebarStore } from '@/stores/sidebar.ts'
-
-
+import { storeToRefs } from 'pinia'
+const info = Path()
 import { useJsonDataStore } from '@/stores/block'
+
 const jsonDataStore = useJsonDataStore()
+const showSetupWizard = ref(false)
+const currentStep = ref(1)
+const totalSteps = ref(5)
+const stepTitles = [
+  'Server Information',
+  'SSL Configuration',
+  'Proxy Locations',
+  'Additional Options',
+  'Review & Generate'
+]
+
+// Reverse Proxy Configuration
+const serverConfig = ref({
+  serverName: '',
+  enableSSL: true,
+  sslPort: '443',
+  certificatePath: '/etc/ssl/certs/nginx.crt',
+  privateKeyPath: '/etc/ssl/private/nginx.key',
+  locations: [
+    { path: '/', proxyPass: 'http://localhost:3000' }
+  ],
+  customDirectives: ''
+})
+const searchQuery = ref('')
+
+const filteredRows = computed(() => {
+  if (!searchQuery.value.trim()) return configRows.value
+  const q = searchQuery.value.toLowerCase()
+  return configRows.value.filter(
+    row =>
+      row.title?.toLowerCase().includes(q) ||
+      String(row.id).includes(q)
+  )
+})
+
+// Generated Nginx Config
+const generatedConfig = computed(() => {
+  const config = []
+
+  // Server block
+  config.push(`server {`)
+  if (serverConfig.value.enableSSL) {
+    config.push(`    # SSL Configuration`)
+    config.push(`    listen ${serverConfig.value.sslPort} ssl;`)
+    config.push(`    ssl_certificate ${serverConfig.value.certificatePath};`)
+    config.push(`    ssl_certificate_key ${serverConfig.value.privateKeyPath};`)
+    config.push('')
+  }
+  else {
+    config.push(`    listen ${serverConfig.value.listenPort};`)
+  }
+  config.push(`    server_name ${serverConfig.value.serverName};`)
+  config.push('')
+
+  // HTTP to HTTPS redirect
+  if (serverConfig.value.redirectHttpToHttps && !serverConfig.value.enableSSL) {
+    config.push(`    # Redirect HTTP to HTTPS`)
+    config.push(`    return 301 https://$host$request_uri;`)
+    config.push('')
+  }
+
+  // SSL configuration
+
+  if (serverConfig.value.enableSSL) {
+    // Locations
+    config.push(`    # Proxy Locations`)
+    serverConfig.value.locations.forEach(loc => {
+      config.push(`    location ${loc.path} {`)
+      config.push(`        proxy_set_header Host $host;`)
+      config.push(`        proxy_set_header X-Real-IP $remote_addr;`)
+      config.push(`        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`)
+      config.push(`        proxy_set_header X-Forwarded-Proto $scheme;`)
+      config.push(`        proxy_pass ${loc.proxyPass};`)
+      config.push(`    }`)
+      config.push('')
+    })
+
+    // Custom directives
+    if (serverConfig.value.customDirectives) {
+      config.push(`    # Custom Directives`)
+      serverConfig.value.customDirectives.split('\n').forEach(line => {
+        if (line.trim()) config.push(`    ${line.trim()}`)
+      })
+    }
+  }
+
+  config.push('}')
+
+  return config.join('\n')
+})
+
+// Wizard Navigation
+const nextStep = () => {
+
+  if (!serverConfig.value.enableSSL && currentStep.value === 2) {
+    currentStep.value++
+  } else if (serverConfig.value.enableSSL && currentStep.value === 3) {
+    serverConfig.value.redirectHttpToHttps = false
+  }
+  if (currentStep.value < totalSteps.value) {
+    currentStep.value++
+  }
+}
+
+const prevStep = () => {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+const addLocation = () => {
+  serverConfig.value.locations.push({
+    path: '/new',
+    proxyPass: 'http://localhost:8080'
+  })
+}
+
+const removeLocation = (index: number) => {
+  serverConfig.value.locations.splice(index, 1)
+}
+
+// Modified openNewBlockDialog to handle wizard mode
+const openNewBlockDialog = (wizardMode = false) => {
+  showSetupWizard.value = wizardMode
+  editMode.value = false
+  newBlockTitle.value = ''
+
+  if (wizardMode) {
+    // Reset wizard state
+    currentStep.value = 1
+    serverConfig.value = {
+      serverName: '',
+      listenPort: '80',
+      enableSSL: true,
+      sslPort: '443',
+      certificatePath: '/etc/ssl/certs/nginx.crt',
+      privateKeyPath: '/etc/ssl/private/nginx.key',
+      locations: [{ path: '/', proxyPass: 'http://localhost:3000' }],
+      redirectHttpToHttps: true,
+      enableGzip: true,
+      customDirectives: ''
+    }
+  }
+
+  showNewBlockDialog.value = true
+}
+function parseNginxBlock(configText: string): NginxEntry | null {
+  const lines = configText.split(/\r?\n/);
+  let lineNumber = 0;
+  let index = 0;
+
+  function parseArgs(argString: string): string[] {
+    return argString
+      .split(/\s+/)
+      .map(arg => arg.trim())
+      .filter(arg => arg.length > 0);
+  }
+
+  function parseBlock(): NginxEntry[] {
+    const block: NginxEntry[] = [];
+
+    while (index < lines.length) {
+      let line = lines[index].trim();
+      lineNumber++;
+
+      if (line === '') {
+        index++;
+        continue;
+      }
+
+      if (line === '}') {
+        index++;
+        break;
+      }
+
+      const match = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s*(.*?)\s*(\{?|;)?$/);
+      if (match) {
+        const [, directive, argStringRaw, ending] = match;
+        let args = parseArgs(argStringRaw.replace(/;$/, ''));
+
+        const entry: NginxEntry = {
+          directive,
+          line: lineNumber,
+          args,
+        };
+
+        // Handle multiline arguments
+        while (
+          index + 1 < lines.length &&
+          !line.trim().endsWith(';') &&
+          !line.trim().endsWith('{') &&
+          !ending
+        ) {
+          index++;
+          lineNumber++;
+          const extra = lines[index].trim();
+          if (extra === '') continue;
+          args = args.concat(parseArgs(extra.replace(/;$/, '')));
+          entry.args = args;
+          line = lines[index]; // update line for loop
+        }
+
+        if (ending === '{') {
+          index++;
+          entry.block = parseBlock();
+        } else {
+          index++;
+        }
+
+        block.push(entry);
+      } else {
+        index++;
+      }
+    }
+
+    return block;
+  }
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    lineNumber++;
+
+    if (line === '' || line.startsWith('#')) {
+      index++;
+      continue;
+    }
+
+    const blockStartMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s*\{$/);
+    if (blockStartMatch) {
+      const [, directive] = blockStartMatch;
+      index++;
+      return {
+        directive,
+        line: lineNumber,
+        args: [],
+        block: parseBlock(),
+      };
+    }
+
+    const singleLineMatch = line.match(/^([a-zA-Z_][a-zA-Z0-9_~]*)\s+(.*?)\s*;$/);
+    if (singleLineMatch) {
+      const [, directive, argsRaw] = singleLineMatch;
+      const args = parseArgs(argsRaw);
+      index++;
+      return {
+        directive,
+        line: lineNumber,
+        args,
+      };
+    }
+
+    index++;
+  }
+
+  return null;
+}
+const { jsonData } = storeToRefs(jsonDataStore)
+// Save reverse proxy block
+const saveReverseProxyBlock = async () => {
+  try {
+    // Create the block with the generated config
+    const res = await fetch(API + `/backend/credentials/create/block?path=${encodeURIComponent(filePath.value)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: newBlockTitle.value,
+        file_name: info.info.sectionId,
+        json_data: generatedConfig.value
+      }),
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to create reverse proxy block')
+    }
+
+    const data = await res.json()
+
+    // Add to UI
+    configRows.value.push({
+      id: data.id,
+      title: newBlockTitle.value,
+    })
+    showNewBlockDialog.value = false
+  } catch (err: any) {
+    error.value = err?.message || 'Failed to create reverse proxy block.'
+  }
+
+
+
+
+}
+
+
+
 const sidebar = useRightSidebarStore()
 
 const router = useRouter()
@@ -475,12 +846,7 @@ const closeMenuOnOutsideClick = (event: MouseEvent) => {
   }
 }
 
-// New block dialog
-const openNewBlockDialog = () => {
-  editMode.value = false
-  newBlockTitle.value = ''
-  showNewBlockDialog.value = true
-}
+
 
 // Edit block
 const editBlock = (block: any) => {
@@ -513,7 +879,7 @@ const confirmDelete = async () => {
     // API call to delete block
     const res = await fetch(
       API +
-        `/backend/credentials/delete/block?id=${currentBlockId.value}&path=${encodeURIComponent(filePath.value)}`,
+      `/backend/credentials/delete/block?id=${currentBlockId.value}&path=${encodeURIComponent(filePath.value)}`,
       {
         method: 'DELETE',
       },
@@ -645,6 +1011,7 @@ watch(
 .fade-leave-active {
   transition: opacity 0.3s;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
@@ -654,6 +1021,7 @@ watch(
 .dialog-leave-active {
   transition: all 0.3s ease;
 }
+
 .dialog-enter-from,
 .dialog-leave-to {
   transform: scale(0.9);
@@ -664,12 +1032,25 @@ watch(
   0% {
     opacity: 0.3;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0.3;
   }
+}
+
+.cyberpunk-pre {
+  padding: 1.5rem;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  overflow-x: auto;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.5);
 }
 
 .animate-pulse-slow {
@@ -680,9 +1061,11 @@ watch(
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -718,11 +1101,14 @@ watch(
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #00f0ff, #a200ff);
 }
+
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -733,10 +1119,12 @@ watch(
 }
 
 @keyframes pulse-slow {
+
   0%,
   100% {
     opacity: 0.3;
   }
+
   50% {
     opacity: 0.15;
   }
