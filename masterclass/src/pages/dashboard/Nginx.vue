@@ -35,7 +35,8 @@
             </h2>
             <div class="flex items-center gap-3">
               <span class="text-sm text-gray-400">{{ config.configs.length }} files</span>
-              <span v-if="config.pendingCount" class="text-sm text-amber-400">{{ config.pendingCount }} modified</span>
+              <span v-if="useModifiedFilesStore().count" class="text-sm text-amber-400">{{ useModifiedFilesStore().count
+                }} modified</span>
             </div>
           </div>
 
@@ -128,15 +129,15 @@
                   <div class="min-w-0">
                     <span class="text-base font-medium text-gray-100 truncate">{{
                       file.name
-                      }}</span>
+                    }}</span>
                     <span class="block text-xs text-gray-400 mt-0.5">{{
                       formatDate(file.lastModified)
-                      }}</span>
+                    }}</span>
                   </div>
                 </div>
                 <span class="px-2.5 py-1 text-xs font-medium rounded-full tracking-wide uppercase" :class="file.status === 'ok'
-                    ? 'bg-green-900/30 text-green-400'
-                    : 'bg-red-900/30 text-red-400'
+                  ? 'bg-green-900/30 text-green-400'
+                  : 'bg-red-900/30 text-red-400'
                   ">
                   {{ file.status }}
                 </span>
@@ -214,13 +215,27 @@
     </Transition>
 
     <!-- Overlay and Deploy Component Transition -->
-    <Transition name="fade-overlay">
-      <div v-if="showDeployComponent"
-        class="fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4 backdrop-blur-sm overflow-auto"
-        @click.self="hideDeployUI">
+    <Transition name="dialog">
+      <div v-if="showDeployComponent" class="fixed inset-0 z-[100] flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity" @click="hideDeployUI"></div>
+
+        <!-- Animated modal wrapper -->
         <div
-          class="max-w-6xl w-full max-h-[90vh] bg-gray-900/90 rounded-xl border border-cyan-500 shadow-2xl shadow-cyan-500/20 p-6 z-50 backdrop-blur-md overflow-y-auto">
-          <component :is="dynamicComponent" class="w-full" @close="hideDeployUI" />
+          class="relative z-10 bg-gradient-to-br from-[rgba(12,12,12,0.95)] to-[rgba(20,20,20,0.98)] border border-[rgba(0,240,255,0.3)] rounded-2xl w-full max-w-3xl p-6 shadow-2xl shadow-[rgba(0,240,255,0.15)] transform transition-all">
+
+          <!-- Animated border gradient -->
+          <div class="absolute inset-0 rounded-2xl pointer-events-none">
+            <div
+              class="absolute -inset-1 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] rounded-2xl blur-lg opacity-30 animate-pulse-slow">
+            </div>
+          </div>
+
+          <!-- Noise overlay -->
+          <div class="absolute inset-0 rounded-2xl bg-noise opacity-10 pointer-events-none"></div>
+
+          <!-- Render your dynamic component -->
+          <component :is="dynamicComponent" :message="rsnapshot" class="relative z-10" @close="hideDeployUI" />
         </div>
       </div>
     </Transition>
@@ -234,10 +249,13 @@ import { useRightSidebarStore } from '@/stores/sidebar.ts'
 import { useConfigStore } from '@/stores/config'
 import type { Component } from 'vue'
 import EssentialDeploy from '@/components/Deploy.vue'
+import { useModifiedFilesStore } from '@/stores/modified'
 
 const sidebar = useRightSidebarStore()
 const config = useConfigStore()
 const router = useRouter()
+
+const nginx = "nginx"
 
 // State
 const showDeployComponent = ref(false)

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { reactive, ref, computed } from 'vue'
 import { API } from '@/config/index'
 import { useConfigStore } from '@/stores/config'
+import { useModifiedFilesStore } from '@/stores/modified'
 
 interface JsonDataType {
   id?: string
@@ -84,7 +85,7 @@ export const useJsonDataStore = defineStore('jsonData', () => {
         },
         body: JSON.stringify({ path, id, data }),
       })
-      useConfigStore().markModified(path)
+      useModifiedFilesStore().addFile({ path, service:'nginx' })
       return response
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unknown error'
@@ -200,7 +201,7 @@ export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
 
       // Refresh the list
       await fetchRsnapshotData()
-      useConfigStore().markModified('rsnapshot.conf')
+      useModifiedFilesStore().addFile({ path: 'rsnapshot.conf', service:'rsnapshot' })
       return result
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unknown error'
@@ -210,37 +211,37 @@ export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
     }
   }
   /**
-   * Delete one entry by ID.
-   */
-  async function deleteRsnapshotData(
-    id: number,
-    comment = 'Deleted rsnapshot entry',
-  ): Promise<UpdateResponse> {
-    isLoading.value = true
-    error.value = null
+ * Delete one entry by ID.
+ */
+async function deleteRsnapshotData(
+  id: number,
+  comment = 'Deleted rsnapshot entry'
+): Promise<UpdateResponse> {
+  isLoading.value = true
+  error.value     = null
 
-    try {
-      const url = `${API}/credentials/delete/rsnapshotData`
-      const body = JSON.stringify({ id, comment })
+  try {
+    const url  = `${API}/credentials/delete/rsnapshotData`
+    const body = JSON.stringify({ id, comment })
 
-      const resData = (await fetchWithHandling(url, {
-        method: 'DELETE', // or 'DELETE' if your endpoint supports it
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      })) as UpdateResponse
+    const resData = (await fetchWithHandling(url, {
+      method:  'DELETE', // or 'DELETE' if your endpoint supports it
+      headers: { 'Content-Type': 'application/json' },
+      body
+    })) as UpdateResponse
 
-      // refresh the config list
-      await fetchRsnapshotData()
-      useConfigStore().markModified('rsnapshot.conf')
+    // refresh the config list
+    await fetchRsnapshotData()
+      useModifiedFilesStore().addFile({ path: 'rsnapshot.conf', service:'rsnapshot' })
 
-      return resData
-    } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Unknown error'
-      throw err
-    } finally {
-      isLoading.value = false
-    }
+    return resData
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error'
+    throw err
+  } finally {
+    isLoading.value = false
   }
+}
 
   /**
    * Create a new BACKUP entry
@@ -274,7 +275,7 @@ export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
       }
 
       await fetchRsnapshotData()
-      useConfigStore().markModified('rsnapshot.conf')
+      useModifiedFilesStore().addFile({ path: 'rsnapshot.conf', service:'rsnapshot' })
       return result
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Unknown error'
@@ -302,7 +303,7 @@ export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
       })) as UpdateResponse
 
       // mark config dirty so UI knows to re-deploy
-      useConfigStore().markModified('rsnapshot.conf')
+      useModifiedFilesStore().addFile({ path: 'rsnapshot.conf', service:'rsnapshot' })
 
       return resData
     } catch (err) {
@@ -323,6 +324,6 @@ export const useRsnapshotDataStore = defineStore('rsnapshotData', () => {
     createGeneralItem,
     createBackupItem,
     updateRsnapshotData,
-    deleteRsnapshotData,
+    deleteRsnapshotData
   }
 })

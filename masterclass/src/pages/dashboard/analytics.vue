@@ -117,7 +117,7 @@
                 </div>
                 <div class="text-xs text-gray-400 font-mono">CONFIGURATION DATA</div>
               </div>
-              <pre class="cyberpunk-pre">{{ parseDirective(JSON.parse(entry.old_text || '{}')) }}</pre>
+              <pre class="cyberpunk-pre">{{ entry.table_edited  !== 'cfg_rsnapshot' ? parseDirective(JSON.parse(entry.old_text || '{}')): entryToRsnapshotLine(JSON.parse(entry.old_text || '{}')) }}</pre>
             </div>
           </div>
         </div>
@@ -162,6 +162,42 @@ const sentinel = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
 const isSearchActive = ref(false)
 const debounceTimer = ref<number | null>(null)
+
+//rsync parser
+type RsnapshotEntry = {
+  id: number
+  type: 'general' | 'backup'
+  directive: string
+  args: string | null
+  source: string | null
+  dest: string | null
+  parameters: string | null
+}
+function parseJsonArray(value: any): any[] {
+  if (!value) return []
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+function entryToRsnapshotLine(entry: RsnapshotEntry): string | null {
+  if (entry.type === 'general') {
+    const args = parseJsonArray(entry.args)
+    return `${entry.directive} ${args.join(' ')}`
+  }
+
+  if (entry.type === 'backup') {
+    const params = parseJsonArray(entry.parameters) as { name: string; value: string }[] | null
+    const paramLines = params?.map(p => `${p.name} ${p.value}`) || []
+    const backupLine = `${entry.directive} ${entry.source} ${entry.dest}`
+    return [backupLine, ...paramLines].join('\n')
+  }
+
+  return null
+}
+
 
 // Initialize observer for infinite scroll
 let observer: IntersectionObserver | null = null

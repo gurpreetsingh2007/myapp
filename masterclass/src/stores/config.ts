@@ -3,6 +3,8 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { API } from '@/config/index'
 
+import { useModifiedFilesStore } from '@/stores/modified'
+
 interface Config {
   file_name: string
   status: string
@@ -13,7 +15,7 @@ interface Config {
 export const useConfigStore = defineStore('config', () => {
   // State
   const configs = ref<Config[]>([])
-  const modifiedFiles = ref<Set<string>>(new Set())
+
   const loading = ref(true)
   const error = ref<string | null>(null)
   const deploying = ref(false)
@@ -21,9 +23,7 @@ export const useConfigStore = defineStore('config', () => {
   const deploySuccess = ref(false)
   const deployMessage = ref('')
 
-  // Getters
-  const pendingCount = computed(() => modifiedFiles.value.size)
-  const isModified = (fileName: string) => modifiedFiles.value.has(fileName)
+
 
   // Actions
   async function loadConfigs() {
@@ -39,8 +39,9 @@ export const useConfigStore = defineStore('config', () => {
       configs.value = data.message
 
       data.message.forEach((config: { file_name: string; deployed: string }) => {
-      if (config.deployed === 'n') {
-        markModified(config.file_name)
+        if (config.deployed === 'n') {
+
+      useModifiedFilesStore().addFile({ path: config.file_name, service:'nginx' })
       }
       })
 
@@ -51,24 +52,15 @@ export const useConfigStore = defineStore('config', () => {
     }
   }
 
-  function markModified(fileName: string) {
-    modifiedFiles.value.add(fileName)
-  }
+
 
 
 
   return {
     configs,
-    modifiedFiles,
     loading,
     error,
-    deploying,
-    showDeployStatus,
-    deploySuccess,
     deployMessage,
-    pendingCount,
-    isModified,
-    loadConfigs,
-    markModified
+    loadConfigs
   }
 })

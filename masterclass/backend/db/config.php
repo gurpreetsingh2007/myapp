@@ -22,6 +22,84 @@ function getDbConnection()
         die("Connection failed: " . $e->getMessage());
     }
 }
+
+function modifiedFiles()
+{
+    try {
+        $pdo = getDbConnection();
+
+        // Drop the table if it exists
+        $pdo->exec("DROP TABLE IF EXISTS modifiedFiles");
+
+        // Create the table
+        $sql = "CREATE TABLE modifiedFiles (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            path TEXT NOT NULL,
+            service VARCHAR(100) NOT NULL
+        ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+
+        $pdo->exec($sql);
+        //echo "Table 'modifiedFiles' dropped and recreated.";
+    } catch (PDOException $e) {
+        die("Failed to reset table: " . $e->getMessage());
+    }
+}
+
+function giveModifiedFiles(): void
+{
+    try {
+        $pdo = getDbConnection();
+
+        $stmt = $pdo->query("SELECT id, path, service FROM modifiedFiles ORDER BY id ASC");
+        $rows = $stmt->fetchAll();
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'data' => $rows
+        ], JSON_UNESCAPED_UNICODE);
+
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Database error: ' . $e->getMessage()
+        ]);
+    }
+}
+function addModifiedFile(string $path, string $service): void
+{
+    try {
+        $path = trim(filter_var($path, FILTER_SANITIZE_STRING));
+        $service = trim(filter_var($service, FILTER_SANITIZE_STRING));
+
+        if ($path === '' || $service === '') {
+            throw new InvalidArgumentException('Path and service cannot be empty.');
+        }
+
+        $pdo = getDbConnection();
+
+        // Check if the path-service pair already exists
+        $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM modifiedFiles WHERE path = :path AND service = :service");
+        $checkStmt->execute([
+            ':path' => $path,
+            ':service' => $service
+        ]);
+
+        if ($checkStmt->fetchColumn() > 0) {
+            return; // Skip insert if already exists
+        }
+
+        // Insert new entry
+        $insertStmt = $pdo->prepare("INSERT INTO modifiedFiles (path, service) VALUES (:path, :service)");
+        $insertStmt->execute([
+            ':path' => $path,
+            ':service' => $service
+        ]);
+    } catch (Exception $e) {
+        die("Failed to add modified file: " . $e->getMessage());
+    }
+}
 function resetDatabase()
 {
     try {
@@ -375,6 +453,7 @@ function createBlock($path)
             $newId,
             $data['title']
         );
+        addModifiedFile($path, 'nginx');
         // ? Mark config as not deployed
         $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
         $resetDeployStmt->execute([$fileName]);
@@ -490,7 +569,7 @@ function updateBlock($id, $path)
             $id,
             implode(',', array_keys($data)),
         );
-
+        addModifiedFile($path, 'nginx');
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
@@ -568,6 +647,7 @@ function deleteBlock($id, $path)
             $id,
             'title,json_data'
         );
+        addModifiedFile($path, 'nginx');
         // ? Mark config as not deployed
         $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
         $resetDeployStmt->execute([$fileName]);
@@ -709,6 +789,7 @@ function updateJsonData()
             $id,
             'json_data'
         );
+        addModifiedFile($path, 'nginx');
         // ? Mark config as not deployed
         $resetDeployStmt = $conn->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = ?");
         $resetDeployStmt->execute([$fileName]);
@@ -926,102 +1007,53 @@ function searchHistory($searchQuery)
 
 
 // nigger lavora
-function searchKeyword($searchQuery)
-{
+function searchKeyword($searchQuery) {
     try {
         $conn = getDbConnection();
+        $fileName = isset($_GET['path']) ? $_GET['path'] : '';
 
-        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
+        $tableName = 'cfg_' . strtolower(pathinfo($fileName, PATHINFO_FILENAME));
 
-        // Sanitize input
-        $cleanQuery = trim(preg_replace('/[^a-zA-Z0-9\s\-_:@.\/]/', ' ', $searchQuery));
-        $cleanQuery = preg_replace('/\s+/', ' ', $cleanQuery);
-        $keywords = array_slice(explode(' ', $cleanQuery), 0, 10);
-
-        $conditions = [];
-        $params = [];
-
-        foreach ($keywords as $i => $word) {
-            $param = ":kw$i";
-            $conditions[] = "(path LIKE $param OR note LIKE $param OR service LIKE $param)";
-            $params[$param] = '%' . $word . '%';
+        if (!preg_match('/^cfg_[a-z0-9_]+$/', $tableName)) {
+            throw new Exception('Invalid table name format');
         }
 
-        $whereClause = count($conditions) > 0 ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        $searchTerm = trim($searchQuery);
+        $searchTermWildcard = '%' . $searchTerm . '%';
 
         $sql = "
-            SELECT id, service, username, note, path
-            FROM cfg_reverse_proxy
-            $whereClause
+            SELECT 
+                id,
+                title
+            FROM `$tableName`
+            WHERE 
+                title LIKE :searchTermWildcard
+                OR
+                json_data LIKE :searchTermWildcard
             ORDER BY id DESC
-            LIMIT :limit OFFSET :offset
         ";
 
         $stmt = $conn->prepare($sql);
-
-        foreach ($params as $param => $value) {
-            $stmt->bindValue($param, $value);
-        }
-
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-
+        $stmt->bindValue(':searchTermWildcard', $searchTermWildcard);
         $stmt->execute();
 
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'data' => $results]);
-    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => true,
+            'data' => $results
+        ]);
+
+    } catch (Exception $e) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
     }
 }
 
-
-if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/backend/credentials/get/search") {
-    header('Content-Type: application/json');
-
-    try {
-        $conn = getDbConnection();
-
-        $path = $_GET['path'] ?? '';
-        $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
-        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 10;
-
-        if (empty($path)) {
-            echo json_encode(['success' => false, 'error' => 'Missing "path" parameter']);
-            exit;
-        }
-
-        // Sanitize
-        $safePath = '%' . trim(preg_replace('/[^a-zA-Z0-9\-_\/:.]/', '', $path)) . '%';
-
-        $sql = "
-            SELECT id, service, username, note, path
-            FROM credentials
-            WHERE path LIKE :path
-            ORDER BY id DESC
-            LIMIT :limit OFFSET :offset
-        ";
-
-        $stmt = $conn->prepare($sql);
-        $stmt->bindValue(':path', $safePath, PDO::PARAM_STR);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        echo json_encode(['success' => true, 'data' => $results]);
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
-    }
-
-    exit;
-}
 
 function parseDirective(array $data, int $indent = 0): string
 {
@@ -1412,7 +1444,7 @@ function updateRsnapshot()
                 return trim(explode('=', $f)[0]);
             }, $fields))
         );
-
+        addModifiedFile('rsnapshot.conf', 'rsnapshot');
         // Mark config as not deployed
         $reset = $pdo->prepare("UPDATE config_file_index SET deployed = 'n' WHERE file_name = 'rsnapshot.conf'");
         $reset->execute();
@@ -1504,6 +1536,7 @@ function addRsnapshot()
             implode(', ', $columns)
         );
 
+        addModifiedFile('rsnapshot.conf', 'rsnapshot');
         // Mark config as not deployed
         $reset = $pdo->prepare("
             UPDATE config_file_index 
@@ -1567,6 +1600,7 @@ function deleteRsnapshot()
             implode(', ', array_keys($old))
         );
 
+        addModifiedFile('rsnapshot.conf', 'rsnapshot');
         // Mark config as not deployed
         $reset = $pdo->prepare("
             UPDATE config_file_index 

@@ -79,6 +79,7 @@ try {
         createHistoryTable();
         createLogTable();
         loadDataJsonRsnapshot();
+        modifiedFiles();
         exit;
     }
     if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/history") {
@@ -170,6 +171,10 @@ try {
     }
     if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/credentials/update/rsnapshotData") {
         updateRsnapshot();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === "GET" && $cleanEndpoint === "/credentials/get/modifiedFiles") {
+        giveModifiedFiles();
         exit;
     }
 

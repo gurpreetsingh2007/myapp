@@ -37,6 +37,9 @@
               <div class="text-lg md:text-xl text-gray-400 font-light tracking-wider">
                 [ SERVER & FILE SYNCHRONIZATION PROTOCOL ]
               </div>
+              <div v-if="currentService" class="mt-2 text-cyan-400 text-lg font-bold tracking-wider">
+                SERVICE: {{ currentService.toUpperCase() }}
+              </div>
               <div class="mt-4 flex justify-center">
                 <div
                   class="w-64 h-1 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full animate-pulse"
@@ -166,7 +169,7 @@
                     <div class="flex items-center space-x-3">
                       <div class="w-4 h-4 bg-purple-400 rounded-full animate-pulse"></div>
                       <h2 class="text-2xl font-bold text-purple-400 tracking-wider">
-                        DATA STREAMS [{{ modifiedFilesArray.length }}]
+                        DATA STREAMS [{{ filteredModifiedFiles.length }}]
                       </h2>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -186,22 +189,27 @@
                   </div>
                 </div>
                 <div class="p-4 flex-1 overflow-y-auto custom-scrollbar" style="max-height: 400px;">
-                  <div class="space-y-4">
+                  <div v-if="filteredModifiedFiles.length === 0" class="text-center py-8">
+                    <div class="text-gray-400 text-lg">
+                      {{ currentService ? `No modified files for service: ${currentService}` : 'No modified files found' }}
+                    </div>
+                  </div>
+                  <div v-else class="space-y-4">
                     <div
-                      v-for="file in modifiedFilesArray"
-                      :key="file"
+                      v-for="file in filteredModifiedFiles"
+                      :key="file.path"
                       :class="[
                         'flex items-center p-4 border-2 rounded-lg transition-all duration-300 cursor-pointer transform',
-                        selectedFiles.includes(file)
+                        selectedFiles.includes(file.path)
                           ? 'border-cyan-400 bg-cyan-900/30 shadow-lg shadow-cyan-400/20'
                           : 'border-gray-600/50 bg-gray-800/30 hover:border-gray-500 hover:bg-gray-700/30',
                       ]"
-                      @click="toggleFile(file)"
+                      @click="toggleFile(file.path)"
                     >
                       <input
-                        :id="file"
+                        :id="file.path"
                         v-model="selectedFiles"
-                        :value="file"
+                        :value="file.path"
                         type="checkbox"
                         class="h-5 w-5 text-cyan-500 focus:ring-cyan-500 border-gray-600 rounded bg-gray-800"
                       />
@@ -219,7 +227,10 @@
                                 clip-rule="evenodd"
                               ></path>
                             </svg>
-                            <span class="text-lg font-bold text-white tracking-wider">{{ file }}</span>
+                            <div>
+                              <span class="text-lg font-bold text-white tracking-wider">{{ file.path }}</span>
+                              <div class="text-xs text-gray-400 mt-1">Service: {{ file.service }}</div>
+                            </div>
                           </div>
                           <div class="flex items-center space-x-2">
                             <div
@@ -318,7 +329,7 @@
                     <div class="text-3xl font-bold text-purple-400">{{ selectedFiles.length }}</div>
                     <div class="text-purple-400/70 text-sm tracking-wider">FILES QUEUED</div>
                     <div class="text-xs text-gray-400 mt-1">
-                      of {{ modifiedFilesArray.length }} modified
+                      of {{ filteredModifiedFiles.length }} modified
                     </div>
                   </div>
 
@@ -387,9 +398,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { API } from '@/config/index'
-import { useConfigStore } from '@/stores/config'
+import { useModifiedFilesStore } from '@/stores/modified'
 import { storeToRefs } from 'pinia'
+import { API } from '@/config/index'
+
+// Props
+const props = defineProps<{
+  message?: string
+}>()
 
 // Types
 interface Client {
@@ -404,11 +420,21 @@ interface ServerListResponse {
 }
 
 // Store
-const configStore = useConfigStore()
-const { modifiedFiles } = storeToRefs(configStore)
+const modifiedFilesStore = useModifiedFilesStore()
+const { files } = storeToRefs(modifiedFilesStore)
 
-// Convert Set to Array for template usage
-const modifiedFilesArray = computed(() => Array.from(modifiedFiles.value))
+// Extract service from message prop
+const currentService = computed(() => {
+  return props.message?.trim() || null
+})
+
+// Filter files by service
+const filteredModifiedFiles = computed(() => {
+  if (!currentService.value) {
+    return files.value
+  }
+  return files.value.filter(file => file.service === currentService.value)
+})
 
 // Reactive state
 const loading = ref(false)
@@ -418,7 +444,6 @@ const successMessage = ref('')
 const serverList = ref<ServerListResponse>({ clients: [], total: 0, timestamp: '' })
 const selectedServers = ref<string[]>([])
 const selectedFiles = ref<string[]>([])
-
 const resultData = ref<any>(null)
 
 const formattedResponse = computed(() => {
@@ -451,6 +476,7 @@ const fetchServerList = async () => {
   error.value = ''
 
   try {
+
     const response = await fetch(`${API}/credentials/get/server_list`)
 
     if (!response.ok) {
@@ -476,7 +502,7 @@ const deselectAllServers = () => {
 }
 
 const selectAllFiles = () => {
-  selectedFiles.value = [...modifiedFilesArray.value]
+  selectedFiles.value = filteredModifiedFiles.value.map(file => file.path)
 }
 
 const deselectAllFiles = () => {
@@ -492,12 +518,12 @@ const toggleServer = (clientId: string) => {
   }
 }
 
-const toggleFile = (fileName: string) => {
-  const index = selectedFiles.value.indexOf(fileName)
+const toggleFile = (filePath: string) => {
+  const index = selectedFiles.value.indexOf(filePath)
   if (index > -1) {
     selectedFiles.value.splice(index, 1)
   } else {
-    selectedFiles.value.push(fileName)
+    selectedFiles.value.push(filePath)
   }
 }
 
@@ -507,9 +533,13 @@ const sendFiles = async () => {
   error.value = ''
   successMessage.value = ''
   resultData.value = null
+
   try {
+    // Replace with your actual API endpoint
+    
     let endpoint: string
     let payload: any
+
     if (allServersSelected.value) {
       endpoint = `${API}/credentials/send/files`
       payload = {
@@ -524,12 +554,15 @@ const sendFiles = async () => {
         targets: selectedServers.value,
       }
     }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
+
     if (!response.ok) throw new Error(`TRANSMISSION FAILED: STATUS ${response.status}`)
+
     const result = await response.json()
     resultData.value = result
     successMessage.value = `Data successfully transmitted to ${selectedServers.value.length} node(s)`
@@ -550,10 +583,6 @@ const refreshServerList = () => {
 // Lifecycle
 onMounted(() => {
   fetchServerList()
-  // Load configs to populate modifiedFiles if not already loaded
-  if (modifiedFilesArray.value.length === 0) {
-    configStore.loadConfigs()
-  }
 })
 </script>
 

@@ -133,8 +133,7 @@
           <h2>Deploy Configuration</h2>
         </div>
         <div class="deploy-placeholder">
-          <p>Deploy functionality will be implemented here.</p>
-          <button class="btn-deploy" disabled>
+          <button class="btn-deploy" @click="showDeployUI">
             Deploy Configuration
           </button>
         </div>
@@ -168,9 +167,31 @@
         <!-- Step 1: Source and Destination -->
         <div v-if="wizardStep === 1" class="wizard-step">
           <div class="form-row">
+            <label class="form-label">Protocol:</label>
+            <div class="flex gap-4">
+              <label class="checkbox-label">
+                <input type="radio" value="ssh" v-model="wizardOptions.protocol" />
+                SSH
+              </label>
+              <label class="checkbox-label">
+                <input type="radio" value="rsync" v-model="wizardOptions.protocol" />
+                RSYNC
+              </label>
+            </div>
+          </div>
+
+          <div v-if="wizardOptions.protocol === 'ssh'" class="form-row">
+            <label class="form-label">SSH User:</label>
+            <input v-model="sshUser" class="form-input" type="text" placeholder="e.g., root@/path/" />
+          </div>
+
+          <div v-if="wizardOptions.protocol === 'rsync'" class="form-row">
+            <label class="form-label">RSYNC Path:</label>
+            <input v-model="sshUser" class="form-input" type="text" placeholder="e.g., rsync://path/" />
+          </div>
+          <div class="form-row">
             <label class="form-label">Source:</label>
-            <input v-model="newBackup.source" class="form-input" type="text"
-              placeholder="e.g., rsync://user@host/path/" />
+            <input v-model="newBackup.source" class="form-input" type="text" placeholder="e.g., host/path/" />
           </div>
           <div class="form-row">
             <label class="form-label">Destination:</label>
@@ -234,13 +255,41 @@
         </div>
       </div>
     </div>
+
   </div>
+  <Transition name="dialog">
+    <div v-if="showDeployComponent" class="fixed inset-0 z-[100] flex items-center justify-center">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/80 backdrop-blur-xsm transition-opacity" @click="hideDeployUI"></div>
+
+      <!-- Animated modal wrapper -->
+      <div
+        class="relative z-10 bg-gradient-to-br from-[rgba(12,12,12,0.95)] to-[rgba(20,20,20,0.98)] border border-[rgba(0,240,255,0.3)] rounded-2xl w-full max-w-3xl p-6 shadow-2xl shadow-[rgba(0,240,255,0.15)] transform transition-all">
+
+        <!-- Animated border gradient -->
+        <div class="absolute inset-0 rounded-2xl pointer-events-none">
+          <div
+            class="absolute -inset-1 bg-gradient-to-r from-[#00f0ff55] to-[#d000ff55] rounded-2xl blur-lg opacity-30 animate-pulse-slow">
+          </div>
+        </div>
+
+        <!-- Noise overlay -->
+        <div class="absolute inset-0 rounded-2xl bg-noise opacity-10 pointer-events-none"></div>
+
+        <!-- Render your dynamic component -->
+        <component :is="dynamicComponent" :message="rsnapshot" class="relative z-10" @close="hideDeployUI" />
+      </div>
+    </div>
+  </Transition>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import { useRsnapshotDataStore } from '@/stores/block'
+import type { Component } from 'vue'
+import EssentialDeploy from '@/components/Deploy.vue'
 
+import { useModifiedFilesStore } from '@/stores/modified'
 interface GeneralItem {
   id: number
   directive: string
@@ -254,6 +303,7 @@ interface BackupItem {
   dest: string
   parameters: Array<{ name: string; value: string }>
 }
+const rsnapshot = "rsnapshot"
 // Delete modal state
 const showDeleteModal = ref(false)
 const deleteType = ref<DeleteType>('general')
@@ -264,6 +314,15 @@ const { isLoading, hasError, error, rsnapshotData } = store
 const activeTab = ref('general')
 const isUpdating = ref(false)
 const searchQuery = ref('')
+
+const showDeployComponent = ref(false)
+const dynamicComponent = ref<Component | null>(null)
+
+function showDeployUI() {
+  showDeployComponent.value = !showDeployComponent.value
+  dynamicComponent.value = EssentialDeploy
+}
+
 
 // Modal states
 const showAddGeneralModal = ref(false)
@@ -280,8 +339,9 @@ const newBackup = ref({
   dest: '',
   parameters: [] as Array<{ name: string; value: string }>
 })
-
+const sshUser = ref()
 const wizardOptions = ref({
+  protocol: false,
   addRsyncArgs: false,
   filterType: 'none', // 'filter', 'exclude', 'none'
   addPassword: false
@@ -358,6 +418,9 @@ function removeParameter(item: BackupItem, index: number) {
   item.parameters.splice(index, 1)
   debouncedUpdate(item)
 }
+const hideDeployUI = () => {
+  showDeployComponent.value = false
+}
 
 // Modal methods
 function closeAddGeneralModal() {
@@ -407,7 +470,7 @@ async function addGeneralItem() {
 
   try {
     // This would need to be implemented in your store
-    // await store.createGeneralItem(newItem)
+    await store.createGeneralItem(newItem)
     console.log('Creating general item:', newItem)
     closeAddGeneralModal()
   } catch (e) {
@@ -442,7 +505,11 @@ async function createBackupItem() {
       })
     }
   }
-
+  if (wizardOptions.value.protocol === 'ssh') {
+    newBackup.value.source = `${sshUser.value || 'root'}@${newBackup.value.source}`
+  } else if (wizardOptions.value.protocol === 'rsync') {
+    newBackup.value.source = `${sshUser.value || 'rsync'}://${newBackup.value.source}`
+  }
   const newItem = {
     type: 'backup',
     directive: 'backup',
@@ -463,6 +530,10 @@ async function createBackupItem() {
 
 onMounted(() => {
   store.fetchRsnapshotData()
+})
+onMounted(() => {
+  const modifiedStore = useModifiedFilesStore()
+  modifiedStore.fetchFiles()
 })
 </script>
 
@@ -722,6 +793,7 @@ onMounted(() => {
 /* Buttons */
 .btn-add,
 .btn-remove,
+.btn-delete,
 .btn-add-new {
   padding: 0.5rem 1rem;
   border: none;
@@ -743,7 +815,8 @@ onMounted(() => {
   background-color: #45a049;
 }
 
-.btn-remove {
+.btn-remove,
+.btn-delete {
   background-color: #f44336;
   color: white;
   padding: 0.5rem;
@@ -831,6 +904,7 @@ onMounted(() => {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
+
 .btn-delete-confirm {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -868,12 +942,11 @@ onMounted(() => {
 
 .btn-deploy {
   padding: 1rem 2rem;
-  background-color: #ccc;
+  background-color: green;
   color: white;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
-  cursor: not-allowed;
   margin-top: 1rem;
 }
 
