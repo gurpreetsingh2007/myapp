@@ -27,17 +27,17 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 }
 </script>
 <template>
-  <div class="app-container" id="App">
+  <div class="app-container bg-gradient-to-br from-slate-50 to-blue-50 text-slate-800" id="App">
     <!-- Show content with sidebar only if user is authenticated and not on login page -->
     <template v-if="token && route.path !== '/'">
-      <div class="dashboard-layout" :class="{ 'sidebar-expanded': isOpen }">
-        <Sidebar class="z-[9999]" />
+      <div class="dashboard-layout transition-all duration-300 ease-in-out" :class="{ 'sidebar-expanded': isOpen }">
+        <Sidebar class="z-[9999] shadow-xl shadow-slate-200/50" />
         <div class="content-container">
-          <Titlebar class="z-[100] titlebar-fixed">
+          <Titlebar class="z-[100] titlebar-fixed bg-black/100 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
             <!-- Optional: Add action buttons in the slot -->
             <template #actions> </template>
           </Titlebar>
-          <main class="main-content bg-black">
+          <main class="main-content  backdrop-blur-sm rounded-xl shadow-lg shadow-slate-200/40 border border-slate-200/50">
             <Transition name="fade" mode="out-in">
               <RouterView />
             </Transition>
@@ -48,9 +48,11 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 
     <!-- Show only RouterView for non-authenticated routes -->
     <template v-else>
-      <Transition name="fade" mode="out-in">
-        <RouterView />
-      </Transition>
+      <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
+        <Transition name="fade" mode="out-in">
+          <RouterView />
+        </Transition>
+      </div>
     </template>
   </div>
 </template>
@@ -78,7 +80,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   flex-direction: column;
   overflow: hidden;
   margin-left: 0px; /* Default width of collapsed sidebar */
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   /* Ensure proper stacking context */
   position: relative;
 }
@@ -92,13 +94,13 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   /* Ensure it's above other content */
   z-index: 100;
   /* Prevent content from flowing behind */
-  background: inherit;
+  /*background: inherit;*/
 }
 
 .main-content {
   flex: 1;
   overflow-y: auto;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: 5px; /* Default width of collapsed sidebar */
   margin-right: 5px;
   margin-top: 5px;
@@ -174,10 +176,10 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   }
 }
 
-/* Fade transitions */
+/* Enhanced fade transitions with smooth easing */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fade-enter-from,
@@ -185,6 +187,25 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
   opacity: 0;
 }
 
+/* Custom scrollbar styling for webkit browsers */
+.main-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.main-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+  background: #005188;
+  border-radius: 3px;
+  opacity: 0.3;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+  background: #007C52;
+  opacity: 0.6;
+}
 
 /* Additional viewport meta fixes (add this to your HTML head if not present) */
 /*

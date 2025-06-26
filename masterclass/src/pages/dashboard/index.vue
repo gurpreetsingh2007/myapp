@@ -1,60 +1,9 @@
-<template>
-  <div class="dashboard-wrapper">
-    <div class="dashboard-container">
-      <section class="services-section">
-        <header class="section-header">
-          <h1 class="section-title">SERVICES</h1>
-          <div class="grid-line"></div>
-        </header>
-
-        <div class="services-grid">
-           <button v-for="item in menuItems" :key="item.title" class="service-button" @click="navigateTo(item.path)">
-              <component :is="iconMap[item.icon]" class="button-icon" />
-              <span>{{ item.title }}</span>
-          </button>
-        </div>
-      </section>
-
-      <section class="servers-section">
-        <header class="section-header">
-          <h2 class="section-title">ACTIVE SERVERS</h2>
-          <div class="grid-line"></div>
-        </header>
-
-        <div v-if="loading" class="loading-state">
-          <div class="pulse-animation"></div>
-          <span>LOADING SERVER LIST...</span>
-        </div>
-
-        <div v-else-if="error" class="error-state">
-          <div class="error-badge">!</div>
-          <span>{{ error }}</span>
-        </div>
-
-        <div v-else-if="servers.length === 0" class="empty-state">
-            <div class="empty-icon">?</div>
-            <span>No active servers found</span>
-        </div>
-
-        <div v-else class="servers-grid">
-          <div v-for="client in servers" :key="client.clientId" class="server-card">
-            <ServerIcon class="server-icon" />
-            <span class="server-name">{{ client.clientId }}</span>
-            <span class="server-address">{{ client.remoteAddress }}</span>
-            <div class="status-indicator active"></div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 defineOptions({ name: 'DashboardIndex' })
 import { Terminal, Code, Database, HardDriveUpload, Server as ServerIcon } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
-
+import { API } from '@/config/index'
 const router = useRouter()
 
 const iconMap = {
@@ -78,7 +27,7 @@ const error = ref('')
 const fetchServers = async () => {
   try {
     loading.value = true
-    const response = await fetch('https://172.18.90.167:4173/backend/credentials/get/server_list')
+    const response = await fetch(API + '/credentials/get/server_list')
     if (!response.ok) throw new Error(`SERVER ERROR: ${response.status}`)
 
     const data = await response.json()
@@ -99,6 +48,58 @@ onMounted(fetchServers)
 const navigateTo = (path: string) => router.push(path)
 </script>
 
+<template>
+  <div class="h-full dashboard-wrapper bg-gradient-to-br from-[#005188]/5 to-[#007C52]/5">
+    <div class="dashboard-container">
+      <section class="services-section">
+        <header class="section-header">
+          <h1 class="section-title">SERVICES</h1>
+          <div class="grid-line"></div>
+        </header>
+
+        <div class="services-grid">
+          <button v-for="item in menuItems" :key="item.title" class="service-button" @click="navigateTo(item.path)">
+            <component :is="iconMap[item.icon]" class="button-icon" />
+            <span>{{ item.title }}</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="servers-section">
+        <header class="section-header">
+          <h2 class="section-title">ACTIVE SERVERS</h2>
+          <div class="grid-line"></div>
+        </header>
+
+        <div v-if="loading" class="loading-state">
+          <div class="pulse-animation"></div>
+          <span>LOADING SERVER LIST...</span>
+        </div>
+
+        <div v-else-if="error" class="error-state">
+          <div class="error-badge">!</div>
+          <span>{{ error }}</span>
+        </div>
+
+        <div v-else-if="servers.length === 0" class="empty-state">
+          <div class="empty-icon">?</div>
+          <span>No active servers found</span>
+        </div>
+
+        <div v-else class="servers-grid">
+          <div v-for="client in servers" :key="client.clientId" class="server-card">
+            <ServerIcon class="server-icon" />
+            <span class="server-name">{{ client.clientId }}</span>
+            <span class="server-address">{{ client.remoteAddress }}</span>
+            <div class="status-indicator active"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+
 <style scoped>
 .dashboard-wrapper {
   display: flex;
@@ -109,11 +110,11 @@ const navigateTo = (path: string) => router.push(path)
 .dashboard-container {
   width: 100%;
   max-width: 1200px;
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .section-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   text-align: center;
 }
 
@@ -122,123 +123,176 @@ const navigateTo = (path: string) => router.push(path)
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
-  background: var(--primary-glow);
+  background: linear-gradient(90deg, #005188, #007C52);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: var(--neon-shadow);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, #005188, #007C52);
+  border-radius: 2px;
 }
 
 .grid-line {
-  height: 2px;
-  background: var(--primary-glow);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #005188, #007C52, transparent);
   margin: 0 auto;
   width: 80%;
+  opacity: 0.3;
 }
 
+/* Servizi - max 4 per riga */
+/* MODIFIED SERVERS GRID - Centered layout */
+.servers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* MODIFIED SERVICES GRID - Centered layout */
 .services-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 160px));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   justify-content: center;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  gap: 1.5rem;
+  margin: 2rem auto;
+  max-width: 800px;
 }
+
+/* MODIFIED MEDIA QUERIES */
+@media (max-width: 1024px) {
+  .services-grid {
+    max-width: 600px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .servers-grid {
+    max-width: 600px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .services-grid {
+    max-width: 300px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .servers-grid {
+    max-width: 300px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .service-button {
+    min-height: 80px;
+  }
+}
+
 
 .service-button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  font-size: 0.9rem;
+  gap: 0.75rem;
+  padding: 1.25rem 0.75rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  letter-spacing: 1px;
-  color: var(--text-color);
-  background: rgba(10, 10, 10, 0.7);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: 8px;
+  letter-spacing: 0.5px;
+  color: #005188;
+  background: white;
+  border: 1px solid rgba(0, 81, 136, 0.2);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   height: 100%;
-  min-height: 90px;
-  width: 100%;
+  min-height: 100px;
+  box-shadow: 0 2px 8px rgba(0, 81, 136, 0.08);
 }
 
 .service-button:hover {
-  background: rgba(0, 240, 255, 0.1);
-  border-color: rgba(208, 0, 255, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 81, 136, 0.12);
+  border-color: rgba(0, 124, 82, 0.4);
+  background: linear-gradient(to bottom right, white, rgba(0, 124, 82, 0.05));
 }
 
 .button-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: #00f0ff;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #005188;
+  transition: transform 0.3s ease;
+}
+
+.service-button:hover .button-icon {
+  transform: scale(1.1);
+  color: #007C52;
 }
 
 .servers-section {
-  margin-top: 2rem;
-}
-
-.servers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 220px));
-  justify-content: center;
-  gap: 1rem;
+  margin-top: 3rem;
 }
 
 .server-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: rgba(15, 15, 15, 0.8);
-  border: 1px solid rgba(208, 0, 255, 0.2);
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid rgba(0, 81, 136, 0.2);
+  border-radius: 12px;
+  transition: all 0.3s ease;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 81, 136, 0.08);
 }
 
 .server-card:hover {
-  border-color: rgba(0, 240, 255, 0.5);
-  background: rgba(0, 240, 255, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 81, 136, 0.12);
+  border-color: rgba(0, 124, 82, 0.4);
 }
 
 .server-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #d000ff;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #005188;
 }
 
 .server-name {
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  color: var(--text-color);
-  word-break: break-all;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #005188;
 }
 
 .server-address {
-  font-size: 0.75rem;
-  opacity: 0.8;
+  font-size: 0.8rem;
+  color: rgba(0, 81, 136, 0.7);
 }
 
 .status-indicator {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 1.25rem;
+  right: 1.25rem;
 }
 
 .status-indicator.active {
-  background-color: #00ff88;
-  box-shadow: 0 0 8px #00ff88;
+  background-color: #007C52;
+  box-shadow: 0 0 0 4px rgba(0, 124, 82, 0.2);
   animation: pulse 2s infinite;
 }
 
@@ -247,10 +301,11 @@ const navigateTo = (path: string) => router.push(path)
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 2rem;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
-  color: #00f0ff;
+  padding: 3rem;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  color: #005188;
+  grid-column: 1 / -1;
 }
 
 .error-state {
@@ -258,17 +313,18 @@ const navigateTo = (path: string) => router.push(path)
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 2rem;
-  color: #ff5555;
-  font-size: 0.9rem;
-  letter-spacing: 1px;
+  padding: 3rem;
+  color: #dc2626;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  grid-column: 1 / -1;
 }
 
 .pulse-animation {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: #00f0ff;
+  background-color: #005188;
   animation: pulse 1.5s infinite;
 }
 
@@ -276,12 +332,13 @@ const navigateTo = (path: string) => router.push(path)
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  background-color: #ff5555;
-  color: #0a0a0a;
+  width: 24px;
+  height: 24px;
+  background-color: #dc2626;
+  color: white;
   border-radius: 50%;
   font-weight: bold;
+  font-size: 0.9rem;
 }
 
 .empty-state {
@@ -290,40 +347,47 @@ const navigateTo = (path: string) => router.push(path)
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  padding: 2rem;
-  color: #888;
-  grid-column: 1 / -1; /* Occupa tutta la larghezza della griglia */
+  padding: 3rem;
+  color: rgba(0, 81, 136, 0.6);
+  grid-column: 1 / -1;
 }
 
 .empty-icon {
-  font-size: 2rem;
-  opacity: 0.5;
+  font-size: 2.5rem;
+  opacity: 0.3;
 }
 
 @keyframes pulse {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
+  0% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.9; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .services-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 120px));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 600px;
   }
 
   .servers-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 160px));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 640px) {
+  .services-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    max-width: 300px;
+  }
+
+  .servers-grid {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    max-width: 300px;
   }
 
   .service-button {
-    padding: 0.5rem;
     min-height: 80px;
-    font-size: 0.8rem;
-  }
-
-  .button-icon {
-    width: 1.25rem;
-    height: 1.25rem;
   }
 }
 </style>

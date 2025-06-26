@@ -1,182 +1,3 @@
-<template>
-  <div class="sidebar-container">
-    <!-- Toggle Button -->
-    <button
-      @click="toggleSidebar"
-      id="togleswitch"
-      class="sidebar-toggle fixed top-4 z-[9999] p-2.5 rounded-lg bg-[rgba(0,240,255,0.1)] border border-[rgba(0,240,255,0.2)] text-[#00f0ff] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-[rgba(0,240,255,0.15)] hover:-translate-y-0.5 hover:scale-110 shadow-lg hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]"
-      :class="isOpen ? 'left-55' : 'left-7'"
-    >
-      <svg
-        class="w-6 h-6 transform transition-transform duration-300"
-        :class="{ 'rotate-90': isOpen }"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
-    </button>
-
-    <!-- Backdrop -->
-    <Transition name="fade">
-      <div
-        v-if="isOpen"
-        @click="toggleSidebar"
-        class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
-      ></div>
-    </Transition>
-
-    <!-- Sidebar -->
-    <aside
-      class="sidebar h-screen bg-gradient-to-b from-[var(--bg-color)] to-[rgba(0,0,0,0.95)] border-r border-[rgba(0,240,255,0.1)] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 overflow-x-hidden shadow-2xl shadow-[rgba(0,240,255,0.05)]"
-      :class="{ 'sidebar-open': isOpen, 'sidebar-closed': !isOpen }"
-    >
-      <!-- Header -->
-      <div
-        class="sidebar-header px-6 py-5 border-b border-[rgba(0,240,255,0.08)] h-16 flex items-center relative overflow-hidden"
-      >
-        <div class="absolute inset-0 bg-[rgba(0,240,255,0.02)] animate-pulse-slow"></div>
-        <Transition name="slide-fade">
-          <h2 v-if="isOpen" class="text-xl font-semibold text-[var(--text-color)] tracking-tight">
-            <span
-              class="bg-gradient-to-r from-[#00f0ff] via-[#a200ff] to-[#d000ff] bg-clip-text text-transparent animate-gradient-shift bg-300%"
-            >
-              GURPREET SINGH
-            </span>
-          </h2>
-        </Transition>
-      </div>
-
-      <!-- Navigation Menu -->
-      <nav class="sidebar-menu mt-6 relative">
-        <ul class="px-2 flex flex-col gap-2">
-          <li
-            v-for="(item, index) in menuItems"
-            :key="index"
-            class="group relative cursor-pointer transition-all duration-200"
-          >
-            <div
-              class="flex items-center rounded-md px-4 py-4 transition-all duration-300 ease-out hover:bg-[rgba(0,240,255,0.05)] hover:translate-x-2 hover:shadow-[inset_0_0_15px_rgba(0,240,255,0.1)]"
-              :class="[
-                item.active
-                  ? 'bg-gradient-to-r from-[rgba(0,240,255,0.1)] to-[rgba(208,0,255,0.1)] border-l-4 border-[#00f0ff]'
-                  : '',
-                isOpen ? 'justify-start gap-6' : 'justify-center',
-              ]"
-              @click="item.isDropdown ? (item.open = !item.open) : router.push(item.path)"
-            >
-              <component
-                :is="iconMap[item.icon as keyof typeof iconMap]"
-                class="w-6 h-10 transition-all transform hover:scale-125 hover:rotate-12"
-                :class="[
-                  item.active ? 'text-[#d000ff]' : 'text-[#00f0ff]',
-                  item.open ? 'animate-pulse' : '',
-                ]"
-              />
-              <Transition name="slide-fade">
-                <span v-if="isOpen" class="text-sm font-medium text-[var(--text-color)]">
-                  {{ item.title }}
-                </span>
-              </Transition>
-              <svg
-                v-if="item.isDropdown && isOpen"
-                class="ml-auto w-4 h-4 transition-transform duration-500"
-                :class="{ 'rotate-90 text-[#d000ff]': item.open }"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-
-            <!-- Dropdown Transition -->
-            <Transition
-              name="dropdown"
-              enter-active-class="dropdown-enter-active"
-              leave-active-class="dropdown-leave-active"
-            >
-              <ul
-                v-if="item.isDropdown && item.open"
-                class="ml-2 mt-1 relative space-y-3 overflow-hidden"
-                :class="{ 'pl-2': isOpen, 'px-1': !isOpen }"
-              >
-                <li
-                  v-for="(child, cIndex) in item.children"
-                  :key="cIndex"
-                  class="flex items-center rounded-md transition-all group origin-left"
-                  :class="{
-                    'px-3 py-2.5': isOpen,
-                    'px-2 py-2 justify-center': !isOpen,
-                    'bg-[rgba(0,240,255,0.05)]': route.path === child.path,
-                  }"
-                >
-                  <RouterLink
-                    :to="child.path"
-                    class="w-full flex items-center gap-3 relative"
-                    :class="{ 'flex-col text-center': !isOpen, 'flex-row': isOpen }"
-                  >
-                    <component
-                      :is="iconMap[child.icon as IconKey]"
-                      class="w-5 h-7 flex-shrink-0 transition-all duration-300"
-                      :class="{
-                        'text-[#d000ff] scale-125': route.path === child.path,
-                        'text-[#00f0ff] group-hover:scale-110': route.path !== child.path,
-                      }"
-                    />
-                    <Transition name="slide-fade">
-                      <span
-                        v-if="isOpen"
-                        class="text-sm text-[var(--text-color)] relative inline-block overflow-hidden"
-                      >
-                        <span class="inline-block">
-                          {{ child.title }}
-                          <span
-                            class="absolute bottom-0 left-0 w-full h-px transition-all duration-500 origin-left"
-                            :class="{
-                              'bg-[#d000ff] scale-x-100': route.path === child.path,
-                              'bg-[#00f0ff] scale-x-0 group-hover:scale-x-100':
-                                route.path !== child.path,
-                            }"
-                          >
-                            <span
-                              class="absolute inset-0 bg-current transition-all duration-1000 opacity-50 group-hover:animate-underline-pulse"
-                            ></span>
-                          </span>
-                        </span>
-                      </span>
-                    </Transition>
-                    <span
-                      v-if="!isOpen"
-                      class="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2 py-1 text-sm bg-[rgba(0,0,0,0.9)] text-[var(--text-color)] rounded-md shadow-xl border border-[rgba(0,240,255,0.2)] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap origin-left scale-75 group-hover:scale-100 backdrop-blur-sm"
-                    >
-                      {{ child.title }}
-                      <span
-                        class="absolute -left-px top-1/2 -translate-y-1/2 w-1 h-3/5 bg-[#00f0ff] rounded-full opacity-50 animate-pulse"
-                      ></span>
-                    </span>
-                  </RouterLink>
-                </li>
-              </ul>
-            </Transition>
-          </li>
-        </ul>
-      </nav>
-    </aside>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, reactive, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -278,6 +99,185 @@ const toggleSidebar = () => {
   sidebarState.toggle()
 }
 </script>
+<template>
+  <div class="sidebar-container">
+    <!-- Toggle Button -->
+    <button
+      @click="toggleSidebar"
+      id="togleswitch"
+      class="sidebar-toggle fixed top-4 z-[9999] p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200 text-[#005188] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white hover:-translate-y-0.5 hover:scale-110 shadow-lg hover:shadow-xl hover:shadow-[#005188]/20"
+      :class="isOpen ? 'left-55' : 'left-7'"
+    >
+      <svg
+        class="w-6 h-6 transform transition-transform duration-300"
+        :class="{ 'rotate-90': isOpen }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+
+    <!-- Backdrop -->
+    <Transition name="fade">
+      <div
+        v-if="isOpen"
+        @click="toggleSidebar"
+        class="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm md:hidden"
+      ></div>
+    </Transition>
+
+    <!-- Sidebar -->
+    <aside
+      class="sidebar h-screen bg-gradient-to-br from-white via-slate-50/80 to-blue-50/40 border-r border-slate-200/60 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 overflow-x-hidden shadow-2xl shadow-slate-200/50"
+      :class="{ 'sidebar-open': isOpen, 'sidebar-closed': !isOpen }"
+    >
+      <!-- Header -->
+      <div
+        class="sidebar-header px-6 py-5 border-b border-slate-200/40 h-16 flex items-center relative overflow-hidden"
+      >
+        <div class="absolute inset-0 bg-gradient-to-r from-[#005188]/5 to-[#007C52]/5 animate-pulse-slow"></div>
+        <Transition name="slide-fade">
+          <h2 v-if="isOpen" class="text-3xl font-bold text-slate-800 tracking-tight relative z-10">
+            <span
+              class="bg-gradient-to-r from-[#005188] via-[#007C52] to-[#005188] bg-clip-text text-transparent animate-gradient-shift bg-300%"
+            >
+              COOPOLIS
+            </span>
+          </h2>
+        </Transition>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="sidebar-menu mt-6 relative">
+        <ul class="px-2 flex flex-col gap-2">
+          <li
+            v-for="(item, index) in menuItems"
+            :key="index"
+            class="group relative cursor-pointer transition-all duration-200"
+          >
+            <div
+              class="flex items-center rounded-xl px-4 py-4 transition-all duration-300 ease-out hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 hover:translate-x-2 hover:shadow-lg hover:shadow-[#005188]/10"
+              :class="[
+                item.active
+                  ? 'bg-gradient-to-r from-[#005188]/15 to-[#007C52]/15 border-l-4 border-[#005188] shadow-md shadow-[#005188]/20'
+                  : '',
+                isOpen ? 'justify-start gap-6' : 'justify-center',
+              ]"
+              @click="item.isDropdown ? (item.open = !item.open) : router.push(item.path)"
+            >
+              <component
+                :is="iconMap[item.icon as keyof typeof iconMap]"
+                class="w-6 h-10 transition-all transform hover:scale-125 hover:rotate-12"
+                :class="[
+                  item.active ? 'text-[#005188]' : 'text-[#007C52]',
+                  item.open ? 'animate-pulse text-[#005188]' : '',
+                ]"
+              />
+              <Transition name="slide-fade">
+                <span v-if="isOpen" class="text-sm font-semibold text-slate-700">
+                  {{ item.title }}
+                </span>
+              </Transition>
+              <svg
+                v-if="item.isDropdown && isOpen"
+                class="ml-auto w-4 h-4 transition-transform duration-500 text-slate-600"
+                :class="{ 'rotate-90 text-[#005188]': item.open }"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+
+            <!-- Dropdown Transition -->
+            <Transition
+              name="dropdown"
+              enter-active-class="dropdown-enter-active"
+              leave-active-class="dropdown-leave-active"
+            >
+              <ul
+                v-if="item.isDropdown && item.open"
+                class="ml-2 mt-1 relative space-y-3 overflow-hidden"
+                :class="{ 'pl-2': isOpen, 'px-1': !isOpen }"
+              >
+                <li
+                  v-for="(child, cIndex) in item.children"
+                  :key="cIndex"
+                  class="flex items-center rounded-lg transition-all group origin-left"
+                  :class="{
+                    'px-3 py-2.5': isOpen,
+                    'px-2 py-2 justify-center': !isOpen,
+                    'bg-gradient-to-r from-[#005188]/10 to-[#007C52]/10 shadow-sm': route.path === child.path,
+                  }"
+                >
+                  <RouterLink
+                    :to="child.path"
+                    class="w-full flex items-center gap-3 relative"
+                    :class="{ 'flex-col text-center': !isOpen, 'flex-row': isOpen }"
+                  >
+                    <component
+                      :is="iconMap[child.icon as IconKey]"
+                      class="w-5 h-7 flex-shrink-0 transition-all duration-300"
+                      :class="{
+                        'text-[#005188] scale-125': route.path === child.path,
+                        'text-[#007C52] group-hover:scale-110 group-hover:text-[#005188]': route.path !== child.path,
+                      }"
+                    />
+                    <Transition name="slide-fade">
+                      <span
+                        v-if="isOpen"
+                        class="text-sm text-slate-700 font-medium relative inline-block overflow-hidden"
+                      >
+                        <span class="inline-block">
+                          {{ child.title }}
+                          <span
+                            class="absolute bottom-0 left-0 w-full h-px transition-all duration-500 origin-left"
+                            :class="{
+                              'bg-[#005188] scale-x-100': route.path === child.path,
+                              'bg-[#007C52] scale-x-0 group-hover:scale-x-100':
+                                route.path !== child.path,
+                            }"
+                          >
+                            <span
+                              class="absolute inset-0 bg-current transition-all duration-1000 opacity-50 group-hover:animate-underline-pulse"
+                            ></span>
+                          </span>
+                        </span>
+                      </span>
+                    </Transition>
+                    <span
+                      v-if="!isOpen"
+                      class="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 text-sm bg-white/95 backdrop-blur-sm text-slate-700 rounded-lg shadow-xl border border-slate-200/60 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap origin-left scale-75 group-hover:scale-100"
+                    >
+                      {{ child.title }}
+                      <span
+                        class="absolute -left-px top-1/2 -translate-y-1/2 w-1 h-3/5 bg-gradient-to-b from-[#005188] to-[#007C52] rounded-full opacity-70 animate-pulse"
+                      ></span>
+                    </span>
+                  </RouterLink>
+                </li>
+              </ul>
+            </Transition>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+  </div>
+</template>
+
 <style scoped>
 /* Base Styles */
 .sidebar-container {
@@ -330,7 +330,7 @@ const toggleSidebar = () => {
     opacity: 0.1;
   }
   50% {
-    opacity: 0.15;
+    opacity: 0.2;
   }
 }
 
@@ -428,7 +428,7 @@ const toggleSidebar = () => {
 
   .sidebar.sidebar-open {
     transform: translateX(0);
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 81, 136, 0.15);
   }
 
   .sidebar.sidebar-closed {
@@ -442,5 +442,28 @@ const toggleSidebar = () => {
   .sidebar-toggle.left-55 {
     left: 13.5rem !important;
   }
+}
+
+/* Light Theme Enhancements */
+.sidebar:hover {
+  box-shadow: 0 25px 50px rgba(0, 81, 136, 0.08);
+}
+
+/* Scrollbar Styling for Light Theme */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgb(248, 250, 252);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #005188, #007C52);
+  border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #007C52, #005188);
 }
 </style>

@@ -177,6 +177,26 @@ try {
         giveModifiedFiles();
         exit;
     }
+    //////server get files--------
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && $cleanEndpoint === "/certificates") {
+        storeCertificates();
+        exit;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && $cleanEndpoint === '/certificates') {
+        getCertificates();
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cleanEndpoint === '/certificates/upload') {
+        uploadCertificates();
+        exit;
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE' && preg_match('#^/certificates/([\w\-.]+)$#', $cleanEndpoint, $matches)) {
+        $filename = $matches[1];
+        deleteCertificate($filename);
+        exit;
+    }
 
 
 
@@ -194,6 +214,11 @@ try {
         sendPartialFilesServer(json_decode(file_get_contents("php://input"), true));
         exit;
     }
+    if ($_SERVER['REQUEST_METHOD'] === 'GET' && $cleanEndpoint === '/certificates/metadata') {
+        getCertificateMetadata();
+        exit;
+    }
+
 
 
 

@@ -1,150 +1,3 @@
-<template>
-  <div class="min-h-screen p-4 sm:p-6 md:p-8">
-    <div class="mx-auto">
-      <!-- Header Section -->
-      <div class="cyberpunk-header mb-10">
-        <h1 class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2 tracking-wide">
-          <span class="text-pink-500">>></span> EDIT HISTORY <span class="text-pink-500"><<</span>
-        </h1>
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <p class="text-cyan-300 font-mono">All configuration changes tracked in real-time</p>
-          <div class="cyberpunk-search flex items-center bg-gray-900 border border-cyan-500 px-4 py-2 rounded-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-pink-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-            </svg>
-            <input
-              type="text"
-              v-model="searchQuery"
-              @input="handleSearchInput"
-              placeholder="Search history..."
-              class="cyberpunk-input bg-transparent border-0 text-gray-200 placeholder-gray-500 focus:ring-0 focus:outline-none w-full"
-            />
-
-          </div>
-
-        </div>
-        <div class="grid-line mt-6"></div>
-      </div>
-
-      <!-- Loading State -->
-      <div v-if="loading && !history.length" class="flex flex-col items-center justify-center py-16">
-        <div class="cyberpunk-loader">
-          <div class="loader-circle"></div>
-          <div class="loader-text text-cyan-400 font-mono mt-4">LOADING HISTORY DATABASE</div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else-if="!history.length && !loading" class="cyberpunk-card text-center py-16 px-4">
-        <div class="cyberpunk-icon mx-auto mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 class="text-2xl font-bold text-cyan-300 mb-2">NO HISTORY RECORDS FOUND</h3>
-        <p class="text-gray-400 max-w-md mx-auto">All edits made to configurations will appear here. Make your first change to see it tracked.</p>
-      </div>
-
-      <!-- History List -->
-      <div v-else class="flex flex-col items-center space-y-6">
-        <div
-          v-for="(entry, index) in uniqueHistory"
-          :key="entry.id"
-          class="cyberpunk-card w-full max-w-6xl"
-          :class="{'glow-cyan': index % 3 === 0, 'glow-pink': index % 3 === 1, 'glow-purple': index % 3 === 2}"
-        >
-          <div class="card-header">
-            <div class="flex items-center gap-3">
-              <div class="cyberpunk-avatar">
-                {{ getInitials(entry.editor_name) }}
-              </div>
-              <div>
-                <h3 class="text-lg font-bold text-cyan-400">{{ entry.editor_name }}</h3>
-                <p class="text-xs text-pink-400 font-mono">{{ entry.editor_gmail }}</p>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-sm font-mono text-cyan-300">{{ formatDateTime(entry.edit_datetime) }}</div>
-              <div class="text-xs text-gray-500 mt-1">ID: {{ entry.id }}</div>
-            </div>
-          </div>
-
-          <div class="grid-line"></div>
-
-          <div class="cyberpunk-grid">
-            <div>
-              <div class="grid-label">ACTION</div>
-              <div class="grid-value text-cyan-300">{{ entry.action }}</div>
-            </div>
-            <div>
-              <div class="grid-label">COMMENT</div>
-              <div class="grid-value">{{ entry.comment || 'No comment provided' }}</div>
-            </div>
-            <div>
-              <div class="grid-label">EDITED TABLE</div>
-              <div class="grid-value">
-                {{ entry.table_edited }} <span class="text-gray-500">(ID: {{ entry.table_row_id }})</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <button
-              @click="toggleDetails(entry.id)"
-              class="cyberpunk-button flex items-center"
-            >
-              <span>{{ expandedEntries.includes(entry.id) ? 'HIDE' : 'VIEW' }} OLD CONFIGURATION</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 ml-2 transition-transform duration-300"
-                :class="{'rotate-180': expandedEntries.includes(entry.id)}"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>
-            </button>
-
-            <div
-              v-if="expandedEntries.includes(entry.id)"
-              class="cyberpunk-codeblock mt-4"
-            >
-              <div class="code-header">
-                <div class="code-dots">
-                  <span class="dot bg-red-500"></span>
-                  <span class="dot bg-yellow-500"></span>
-                  <span class="dot bg-green-500"></span>
-                </div>
-                <div class="text-xs text-gray-400 font-mono">CONFIGURATION DATA</div>
-              </div>
-              <pre class="cyberpunk-pre">{{ entry.table_edited  !== 'cfg_rsnapshot' ? parseDirective(JSON.parse(entry.old_text || '{}')): entryToRsnapshotLine(JSON.parse(entry.old_text || '{}')) }}</pre>
-            </div>
-          </div>
-        </div>
-
-        <!-- Loading More Indicator -->
-        <div v-if="loadingMore" class="flex justify-center py-8">
-          <div class="cyberpunk-loader-sm">
-            <div class="loader-circle-sm"></div>
-            <div class="text-cyan-400 text-sm font-mono mt-4">LOADING MORE RECORDS...</div>
-          </div>
-        </div>
-
-        <!-- Sentinel for infinite scroll -->
-        <div ref="sentinel" class="h-1"></div>
-
-        <!-- End of History -->
-        <div v-if="endOfHistory && !loadingMore" class="text-center py-10">
-          <div class="cyberpunk-endline inline-flex items-center text-gray-500">
-            <div class="h-px bg-cyan-500 w-16 mr-4"></div>
-            END OF HISTORY RECORDS
-            <div class="h-px bg-cyan-500 w-16 ml-4"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
@@ -482,49 +335,198 @@ onMounted(async () => {
 </script>
 
 
+<template>
+  <div class="min-h-screen p-4 sm:p-6 md:p-8 bg-gradient-to-br from-slate-50 to-blue-50/30">
+    <div class="mx-auto">
+      <!-- Header Section -->
+      <div class="modern-header mb-10">
+        <h1 class="text-3xl md:text-4xl font-bold text-[#005188] mb-2 tracking-wide">
+          <span class="text-[#007C52]">>></span> EDIT HISTORY <span class="text-[#007C52]"><<</span>
+        </h1>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <p class="text-[#007C52] font-semibold">All configuration changes tracked in real-time</p>
+          <div class="modern-search flex items-center bg-white/80 backdrop-blur-sm border border-slate-300 px-4 py-2 rounded-full shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#007C52] mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+            <input
+              type="text"
+              v-model="searchQuery"
+              @input="handleSearchInput"
+              placeholder="Search history..."
+              class="modern-input bg-transparent border-0 text-slate-700 placeholder-slate-500 focus:ring-0 focus:outline-none w-full font-medium"
+            />
+          </div>
+        </div>
+        <div class="grid-line mt-6"></div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading && !history.length" class="flex flex-col items-center justify-center py-16">
+        <div class="modern-loader">
+          <div class="loader-circle"></div>
+          <div class="loader-text text-[#005188] font-semibold mt-4">LOADING HISTORY DATABASE</div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-else-if="!history.length && !loading" class="modern-card text-center py-16 px-4">
+        <div class="modern-icon mx-auto mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-[#007C52]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-[#005188] mb-2">NO HISTORY RECORDS FOUND</h3>
+        <p class="text-slate-600 max-w-md mx-auto">All edits made to configurations will appear here. Make your first change to see it tracked.</p>
+      </div>
+
+      <!-- History List -->
+      <div v-else class="flex flex-col items-center space-y-6">
+        <div
+          v-for="(entry, index) in uniqueHistory"
+          :key="entry.id"
+          class="modern-card w-full max-w-6xl"
+          :class="{'glow-blue': index % 3 === 0, 'glow-green': index % 3 === 1, 'glow-teal': index % 3 === 2}"
+        >
+          <div class="card-header">
+            <div class="flex items-center gap-3">
+              <div class="modern-avatar">
+                {{ getInitials(entry.editor_name) }}
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-[#005188]">{{ entry.editor_name }}</h3>
+                <p class="text-xs text-[#007C52] font-semibold">{{ entry.editor_gmail }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm font-semibold text-[#005188]">{{ formatDateTime(entry.edit_datetime) }}</div>
+              <div class="text-xs text-slate-500 mt-1">ID: {{ entry.id }}</div>
+            </div>
+          </div>
+
+          <div class="grid-line"></div>
+
+          <div class="modern-grid">
+            <div>
+              <div class="grid-label">ACTION</div>
+              <div class="grid-value text-[#005188]">{{ entry.action }}</div>
+            </div>
+            <div>
+              <div class="grid-label">COMMENT</div>
+              <div class="grid-value">{{ entry.comment || 'No comment provided' }}</div>
+            </div>
+            <div>
+              <div class="grid-label">EDITED TABLE</div>
+              <div class="grid-value">
+                {{ entry.table_edited }} <span class="text-slate-500">(ID: {{ entry.table_row_id }})</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <button
+              @click="toggleDetails(entry.id)"
+              class="modern-button flex items-center"
+            >
+              <span>{{ expandedEntries.includes(entry.id) ? 'HIDE' : 'VIEW' }} OLD CONFIGURATION</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 ml-2 transition-transform duration-300"
+                :class="{'rotate-180': expandedEntries.includes(entry.id)}"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <div
+              v-if="expandedEntries.includes(entry.id)"
+              class="modern-codeblock mt-4"
+            >
+              <div class="code-header">
+                <div class="code-dots">
+                  <span class="dot bg-red-400"></span>
+                  <span class="dot bg-amber-400"></span>
+                  <span class="dot bg-emerald-400"></span>
+                </div>
+                <div class="text-xs text-slate-600 font-semibold">CONFIGURATION DATA</div>
+              </div>
+              <pre class="modern-pre">{{ entry.table_edited  !== 'cfg_rsnapshot' ? parseDirective(JSON.parse(entry.old_text || '{}')): entryToRsnapshotLine(JSON.parse(entry.old_text || '{}')) }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading More Indicator -->
+        <div v-if="loadingMore" class="flex justify-center py-8">
+          <div class="modern-loader-sm">
+            <div class="loader-circle-sm"></div>
+            <div class="text-[#005188] text-sm font-semibold mt-4">LOADING MORE RECORDS...</div>
+          </div>
+        </div>
+
+        <!-- Sentinel for infinite scroll -->
+        <div ref="sentinel" class="h-1"></div>
+
+        <!-- End of History -->
+        <div v-if="endOfHistory && !loadingMore" class="text-center py-10">
+          <div class="modern-endline inline-flex items-center text-slate-500">
+            <div class="h-px bg-gradient-to-r from-transparent via-[#005188] to-transparent w-16 mr-4"></div>
+            END OF HISTORY RECORDS
+            <div class="h-px bg-gradient-to-r from-transparent via-[#005188] to-transparent w-16 ml-4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
-.cyberpunk-header {
+.modern-header {
   position: relative;
 }
 
 .grid-line {
   height: 2px;
-  background: linear-gradient(90deg, transparent, #06b6d4, #ec4899, transparent);
+  background: linear-gradient(90deg, transparent, #005188, #007C52, transparent);
   margin-top: 0.5rem;
+  border-radius: 1px;
 }
 
-.cyberpunk-card {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid #1e40af;
-  border-radius: 8px;
-  padding: 1rem;
+.modern-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 81, 136, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
   margin-top: 1rem;
   margin-right: 1rem;
   margin-left: 1rem;
+  shadow: 0 4px 20px rgba(0, 81, 136, 0.1);
 }
 
-.cyberpunk-card:hover {
+.modern-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 81, 136, 0.15);
+  border-color: rgba(0, 81, 136, 0.3);
 }
 
-.glow-cyan {
-  box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
-  border-color: #06b6d4;
+.glow-blue {
+  box-shadow: 0 0 25px rgba(0, 81, 136, 0.2);
+  border-color: #005188;
 }
 
-.glow-pink {
-  box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
-  border-color: #ec4899;
+.glow-green {
+  box-shadow: 0 0 25px rgba(0, 124, 82, 0.2);
+  border-color: #007C52;
 }
 
-.glow-purple {
-  box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
-  border-color: #8b5cf6;
+.glow-teal {
+  box-shadow: 0 0 25px rgba(20, 184, 166, 0.2);
+  border-color: #14b8a6;
 }
 
 .card-header {
@@ -534,20 +536,21 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
-.cyberpunk-avatar {
+.modern-avatar {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
-  border-radius: 8px;
+  background: linear-gradient(135deg, #005188 0%, #007C52 100%);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 1.1rem;
-  color: #0f172a;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 81, 136, 0.3);
 }
 
-.cyberpunk-grid {
+.modern-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
@@ -558,22 +561,24 @@ onMounted(async () => {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 
 .grid-value {
   font-size: 0.95rem;
-  color: #e2e8f0;
+  color: #334155;
   line-height: 1.5;
+  font-weight: 500;
 }
 
-.cyberpunk-button {
-  background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+.modern-button {
+  background: linear-gradient(135deg, #005188, #007C52);
   border: none;
-  padding: 0.5rem 1.5rem;
-  border-radius: 30px;
-  color: #0f172a;
+  padding: 0.6rem 1.5rem;
+  border-radius: 50px;
+  color: white;
   font-weight: bold;
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -582,27 +587,32 @@ onMounted(async () => {
   transition: all 0.3s ease;
   display: inline-flex;
   align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 81, 136, 0.3);
 }
 
-.cyberpunk-button:hover {
+.modern-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 81, 136, 0.4);
+  background: linear-gradient(135deg, #007C52, #005188);
 }
 
-.cyberpunk-codeblock {
-  background: #0d1424;
-  border: 1px solid #1e40af;
-  border-radius: 8px;
+.modern-codeblock {
+  background: rgba(248, 250, 252, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 81, 136, 0.2);
+  border-radius: 12px;
   overflow: hidden;
   margin-top: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 81, 136, 0.1);
 }
 
 .code-header {
-  background: rgba(30, 41, 59, 0.8);
-  padding: 0.5rem 1rem;
+  background: rgba(0, 81, 136, 0.1);
+  padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid rgba(0, 81, 136, 0.1);
 }
 
 .code-dots {
@@ -616,41 +626,47 @@ onMounted(async () => {
   border-radius: 50%;
 }
 
-.cyberpunk-pre {
+.modern-pre {
   padding: 1.5rem;
   font-family: 'Fira Code', 'Courier New', monospace;
   font-size: 0.9rem;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #475569;
   overflow-x: auto;
   text-align: left;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.cyberpunk-search {
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+.modern-search {
+  transition: all 0.3s ease;
 }
 
-.cyberpunk-input {
-  font-family: 'Courier New', monospace;
+.modern-search:hover {
+  box-shadow: 0 8px 25px rgba(0, 81, 136, 0.15);
+  border-color: rgba(0, 81, 136, 0.4);
 }
 
-.cyberpunk-endline {
-  font-family: 'Courier New', monospace;
+.modern-input {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.modern-endline {
+  font-family: system-ui, -apple-system, sans-serif;
   letter-spacing: 0.05em;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 /* Loader animation */
-.cyberpunk-loader {
+.modern-loader {
   position: relative;
 }
 
 .loader-circle {
   width: 60px;
   height: 60px;
-  border: 4px solid rgba(6, 182, 212, 0.2);
-  border-top: 4px solid #06b6d4;
+  border: 4px solid rgba(0, 81, 136, 0.2);
+  border-top: 4px solid #005188;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto;
@@ -665,15 +681,15 @@ onMounted(async () => {
   animation: dots 1.5s infinite steps(4, end);
 }
 
-.cyberpunk-loader-sm {
+.modern-loader-sm {
   text-align: center;
 }
 
 .loader-circle-sm {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(6, 182, 212, 0.2);
-  border-top: 3px solid #06b6d4;
+  border: 3px solid rgba(0, 81, 136, 0.2);
+  border-top: 3px solid #005188;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto;
@@ -692,17 +708,22 @@ onMounted(async () => {
 }
 
 /* Scrollbar styling for code blocks */
-.cyberpunk-pre::-webkit-scrollbar {
+.modern-pre::-webkit-scrollbar {
   height: 8px;
 }
 
-.cyberpunk-pre::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
+.modern-pre::-webkit-scrollbar-track {
+  background: rgba(248, 250, 252, 0.5);
+  border-radius: 4px;
 }
 
-.cyberpunk-pre::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+.modern-pre::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #005188, #007C52);
   border-radius: 4px;
+}
+
+.modern-pre::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #007C52, #005188);
 }
 
 /* Responsive adjustments */
@@ -712,12 +733,38 @@ onMounted(async () => {
     gap: 1rem;
   }
 
-  .cyberpunk-grid {
+  .modern-grid {
     grid-template-columns: 1fr;
   }
 
-  .cyberpunk-header h1 {
+  .modern-header h1 {
     font-size: 2rem;
   }
+}
+
+/* Additional modern touches */
+.modern-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 81, 136, 0.3), transparent);
+}
+
+.modern-search:focus-within {
+  border-color: #005188;
+  box-shadow: 0 0 0 3px rgba(0, 81, 136, 0.1);
+}
+
+/* Smooth hover effects */
+.modern-card:hover .modern-avatar {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 81, 136, 0.4);
+}
+
+.modern-card:hover .grid-value {
+  color: #1e293b;
 }
 </style>

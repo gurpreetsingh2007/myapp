@@ -1007,7 +1007,8 @@ function searchHistory($searchQuery)
 
 
 // nigger lavora
-function searchKeyword($searchQuery) {
+function searchKeyword($searchQuery)
+{
     try {
         $conn = getDbConnection();
         $fileName = isset($_GET['path']) ? $_GET['path'] : '';
@@ -1620,4 +1621,171 @@ function deleteRsnapshot()
         http_response_code(500);
         echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
+}
+
+
+/////////////////server save files
+
+function storeCertificates()
+{
+    header('Content-Type: application/json');
+
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+
+    if (!isset($data['certificates']) || !is_array($data['certificates'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid certificate payload',
+        ]);
+        return;
+    }
+
+    $savedFiles = [];
+
+    foreach ($data['certificates'] as $cert) {
+        if (!isset($cert['filename'], $cert['content'])) {
+            continue;
+        }
+
+        // Sanitize filename
+        $safeFilename = basename($cert['filename']);
+        $savePath = __DIR__ . "/cert_storage/" . $safeFilename;
+
+        if (!is_dir(__DIR__ . "/cert_storage")) {
+            mkdir(__DIR__ . "/cert_storage", 0700, true);
+        }
+
+        if (file_put_contents($savePath, $cert['content']) !== false) {
+            $savedFiles[] = $safeFilename;
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'saved' => $savedFiles,
+    ]);
+}
+function getCertificates()
+{
+    header('Content-Type: application/json');
+
+    $dir = __DIR__ . '/cert_storage/';
+    if (!is_dir($dir)) {
+        echo json_encode([]);
+        return;
+    }
+
+    $files = scandir($dir);
+    if ($files === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to read certificate directory']);
+        return;
+    }
+
+    $files = array_diff($files, ['.', '..']);
+    $certs = [];
+
+    foreach ($files as $file) {
+        $fullPath = $dir . $file;
+        if (!is_file($fullPath))
+            continue;
+
+        $content = file_get_contents($fullPath);
+        $expires = getCertificateExpiry($content);
+
+        $certs[] = [
+            'id' => $file,
+            'filename' => $file,
+            'size' => filesize($fullPath),
+            'expires' => $expires,
+        ];
+    }
+
+    echo json_encode($certs);
+}
+
+function uploadCertificates()
+{
+    header('Content-Type: application/json');
+
+    if (empty($_FILES['files'])) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'No files uploaded']);
+        return;
+    }
+
+    $storage = __DIR__ . '/cert_storage/';
+    if (!is_dir($storage))
+        mkdir($storage, 0700, true);
+
+    $saved = [];
+
+    foreach ($_FILES['files']['name'] as $index => $originalName) {
+        $tmpName = $_FILES['files']['tmp_name'][$index];
+        $safeName = basename($originalName);
+        $target = $storage . $safeName;
+
+        if (move_uploaded_file($tmpName, $target)) {
+            $saved[] = $safeName;
+        }
+    }
+
+    echo json_encode(['success' => true, 'saved' => $saved]);
+}
+function deleteCertificate($filename)
+{
+    header('Content-Type: application/json');
+
+    $safeName = basename($filename);
+    $path = __DIR__ . "/cert_storage/" . $safeName;
+
+    if (!file_exists($path)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'File not found']);
+        return;
+    }
+
+    unlink($path);
+    echo json_encode(['success' => true, 'deleted' => $safeName]);
+}
+function getCertificateExpiry($pem)
+{
+    if (strpos($pem, '-----BEGIN CERTIFICATE-----') === false) {
+        return null;
+    }
+
+    $cert = openssl_x509_read($pem);
+    if (!$cert)
+        return null;
+
+    $info = openssl_x509_parse($cert);
+    if (!isset($info['validTo_time_t']))
+        return null;
+
+    return date('Y-m-d', $info['validTo_time_t']);
+}
+
+function getCertificateMetadata()
+{
+    header('Content-Type: application/json');
+
+    // This would ideally come from a database
+    $metadata = [
+        'example.crt' => [
+            'name' => 'Primary Certificate',
+            'domain' => 'example.com',
+            'wildcard' => false,
+            'notes' => 'Main website certificate'
+        ],
+        'wildcard.example.crt' => [
+            'name' => 'Wildcard Certificate',
+            'domain' => '*.example.com',
+            'wildcard' => true,
+            'notes' => 'For all subdomains'
+        ]
+    ];
+
+    echo json_encode($metadata);
 }

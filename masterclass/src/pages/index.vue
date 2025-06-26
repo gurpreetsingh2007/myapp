@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[var(--bg-color)] flex items-center justify-center p-4">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
     <div
       class="container max-w-[1500px] flex flex-col lg:flex-row-reverse items-center justify-between gap-12 animate-fade-in"
     >
@@ -7,12 +7,12 @@
       <div class="flex-1 xl:flex-[1.2] flex justify-center items-center w-full max-w-[800px]">
         <div class="relative group w-full max-w-[600px]">
           <div
-            class="absolute inset-0 bg-[var(--primary-glow)] rounded-[30%] blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-300 animate-pulse"
+            class="absolute inset-0 bg-[#007C52] rounded-[30%] blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-300 animate-pulse"
           ></div>
           <img
             src="@/assets/logo.webp"
             alt="Application Logo"
-            class="relative w-full h-auto max-w-[100%] max-h-[100%] rounded-3xl object-contain border-2 border-transparent group-hover:border-[var(--primary-glow)] transition-all duration-300 shadow-2xl hover:shadow-[0_0_80px_var(--primary-glow)]"
+            class="relative w-full h-auto max-w-[100%] max-h-[100%] rounded-3xl object-contain border-2 border-transparent group-hover:border-[#005188] transition-all duration-300 shadow-xl hover:shadow-[0_0_40px_rgba(0,81,136,0.2)]"
           />
         </div>
       </div>
@@ -20,11 +20,11 @@
       <!-- Left Side - Login Form -->
       <div class="flex-1 flex justify-center items-center w-full max-w-[600px]">
         <div
-          class="w-full p-8 bg-black/30 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl transition-all hover:shadow-[0_0_60px_var(--primary-glow)] animate-slide-in-left"
+          class="w-full p-8 bg-white/90 backdrop-blur-md rounded-3xl border border-[#005188]/20 shadow-xl transition-all hover:shadow-[0_0_30px_rgba(0,81,136,0.15)] animate-slide-in-left"
           :class="{ 'animate-shake': loginError }"
         >
           <h2
-            class="text-4xl xl:text-5xl mb-16 font-bold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
+            class="text-4xl xl:text-5xl mb-16 font-bold bg-gradient-to-r from-[#005188] to-[#007C52] bg-clip-text text-transparent"
           >
             Secure Access
           </h2>
@@ -34,7 +34,7 @@
               <div class="group">
                 <label
                   for="username"
-                  class="block text-lg xl:text-xl font-medium text-[#00f0ff] mb-3"
+                  class="block text-lg xl:text-xl font-medium text-[#005188] mb-3"
                   >Username</label
                 >
                 <input
@@ -44,7 +44,7 @@
                   v-model="username"
                   autocomplete="username"
                   required
-                  class="w-full px-6 py-4 text-lg xl:text-xl bg-black/40 rounded-xl border-2 border-white/10 focus:outline-none focus:border-[#00f0ff] focus:ring-2 focus:ring-[#00f0ff] transition-all placeholder-gray-400 hover:border-white/30"
+                  class="w-full px-6 py-4 text-lg xl:text-xl bg-white rounded-xl border-2 border-[#005188]/20 focus:outline-none focus:border-[#005188] focus:ring-2 focus:ring-[#005188]/30 transition-all placeholder-[#005188]/50 hover:border-[#005188]/40"
                   placeholder="Enter your username"
                   @input="clearError"
                 />
@@ -53,7 +53,7 @@
               <div class="group">
                 <label
                   for="password"
-                  class="block text-lg xl:text-xl font-medium text-[#d000ff] mb-3"
+                  class="block text-lg xl:text-xl font-medium text-[#007C52] mb-3"
                   >Password</label
                 >
                 <input
@@ -63,7 +63,7 @@
                   v-model="password"
                   required
                   autocomplete="current-password"
-                  class="w-full px-6 py-4 text-lg xl:text-xl bg-black/40 rounded-xl border-2 border-white/10 focus:outline-none focus:border-[#d000ff] focus:ring-2 focus:ring-[#d000ff] transition-all placeholder-gray-400 hover:border-white/30"
+                  class="w-full px-6 py-4 text-lg xl:text-xl bg-white rounded-xl border-2 border-[#007C52]/20 focus:outline-none focus:border-[#007C52] focus:ring-2 focus:ring-[#007C52]/30 transition-all placeholder-[#007C52]/50 hover:border-[#007C52]/40"
                   placeholder="••••••••"
                   @input="clearError"
                 />
@@ -73,15 +73,15 @@
             <!-- Error Message -->
             <div
               v-if="loginError"
-              class="mb-6 p-4 text-center text-red-400 border border-red-400/30 rounded-xl bg-red-900/10 backdrop-blur-sm animate-error-glow"
+              class="mb-6 p-4 text-center text-red-600 border border-red-300 rounded-xl bg-red-50 backdrop-blur-sm animate-error-glow"
             >
-              <span class="text-shadow-red-glow">{{ errorMessage }}</span>
+              <span>{{ errorMessage }}</span>
             </div>
 
             <button
               type="submit"
               id="login-btn"
-              class="button w-full py-4 text-xl xl:text-2xl font-bold tracking-wider transition-transform hover:scale-[1.02] hover:shadow-[0_0_40px_#00f0ff]"
+              class="w-full py-4 text-xl xl:text-2xl font-bold tracking-wider bg-gradient-to-r from-[#005188] to-[#007C52] text-white rounded-xl transition-all hover:shadow-[0_5px_20px_-5px_rgba(0,81,136,0.3)] hover:scale-[1.02] active:scale-100"
               v-on:click="handleLogin"
             >
               AUTHENTICATE
@@ -92,6 +92,7 @@
     </div>
   </div>
 </template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -116,7 +117,7 @@ const clearError = () => {
   }
 }
 
-// 🔘 Fetch public key on mount
+// đź”� Fetch public key on mount
 onMounted(async () => {
   try {
     const response = await fetch(`${API}/keys/PublicKey`, {
@@ -239,13 +240,6 @@ const handleLogin = async () => {
   animation: error-glow 0.4s ease-out;
 }
 
-.text-shadow-red-glow {
-  text-shadow:
-    0 0 8px rgba(255, 50, 50, 0.6),
-    0 0 16px rgba(255, 0, 0, 0.3);
-}
-
-/* Using imported fonts directly without @font-face */
 .animate-fade-in {
   animation: fadeIn 1s ease-in;
 }
@@ -283,43 +277,10 @@ const handleLogin = async () => {
 @keyframes pulse {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.2;
   }
   50% {
-    opacity: 0.6;
-  }
-}
-
-@media (min-width: 1920px) {
-  .container {
-    gap: 15vw;
-    padding: 4rem;
-  }
-
-  .rounded-3xl {
-    border-radius: 2.5rem;
-  }
-
-  .text-5xl {
-    font-size: 3.5rem;
-  }
-
-  .custom-max-w {
-    max-width: 600px;
-  }
-}
-
-@media (min-width: 2560px) {
-  .container {
-    max-width: 2000px;
-  }
-
-  .text-5xl {
-    font-size: 4rem;
-  }
-
-  input {
-    padding: 1.5rem;
+    opacity: 0.3;
   }
 }
 </style>

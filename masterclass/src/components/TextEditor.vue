@@ -1,38 +1,38 @@
 <template>
-  <div class="flex flex-col h-full w-full bg-[var(--bg-color)]">
+  <div class="flex flex-col h-full w-full bg-gradient-to-br from-slate-50 to-blue-50">
     <!-- Header -->
     <div
-      class="p-4 flex items-center justify-between border-b border-[#00f0ff] bg-black/50 backdrop-blur-sm shadow-[0_0_20px_rgba(0,240,255,0.1)]"
+      class="p-4 flex items-center justify-between border-b border-[#005188]/20 bg-white/80 backdrop-blur-sm shadow-lg shadow-[#005188]/10"
     >
       <h2
-        class="text-xl font-semibold bg-gradient-to-r from-[#00f0ff] to-[#d000ff] bg-clip-text text-transparent"
+        class="text-xl font-semibold bg-gradient-to-r from-[#005188] to-[#007C52] bg-clip-text text-transparent"
       >
         EDITOR
       </h2>
       <div class="flex items-center gap-3">
-        <div v-if="isLoading" class="flex items-center gap-2 text-[#00f0ff] animate-pulse">
+        <div v-if="isLoading" class="flex items-center gap-2 text-[#005188]">
           <div
-            class="h-4 w-4 border-2 border-[#00f0ff] border-t-transparent rounded-full animate-spin"
+            class="h-4 w-4 border-2 border-[#005188] border-t-transparent rounded-full animate-spin"
           ></div>
-          <span class="text-sm font-mono">INITIALIZING...</span>
+          <span class="text-sm font-mono font-medium">INITIALIZING...</span>
         </div>
         <button
-          class="px-4 py-2 bg-gradient-to-br from-[#00f0ff] to-[#d000ff] text-black font-bold rounded-md hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] transition-all duration-300 group"
+          class="px-4 py-2 bg-gradient-to-br from-[#005188] to-[#007C52] text-white font-bold rounded-lg hover:shadow-lg hover:shadow-[#005188]/30 transition-all group relative overflow-hidden"
           @click="refreshData"
         >
           <span class="relative z-10">REFRESH BLOCK</span>
           <div
-            class="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,#00f0ff55_0%,transparent_70%)]"
+            class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-white/20 to-transparent"
           ></div>
         </button>
         <button
           v-if="isDataLoaded"
-          class="px-4 py-2 bg-gradient-to-br from-[#00f0ff] to-[#d000ff] text-black font-bold rounded-md hover:shadow-[0_0_20px_rgba(0,240,255,0.5)] transition-all duration-300 group"
+          class="px-4 py-2 bg-gradient-to-br from-[#007C52] to-[#005188] text-white font-bold rounded-lg hover:shadow-lg hover:shadow-[#007C52]/30 transition-all group relative overflow-hidden"
           @click="save"
         >
           <span class="relative z-10">SAVE</span>
           <div
-            class="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,#00f0ff55_0%,transparent_70%)]"
+            class="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-white/20 to-transparent"
           ></div>
         </button>
       </div>
@@ -41,11 +41,11 @@
     <!-- Error notification -->
     <div
       v-if="hasError"
-      class="px-4 py-3 flex items-center bg-[#d000ff15] border-b border-[#d000ff] text-[#ff006a] animate-pulse-fast"
+      class="px-4 py-3 flex items-center bg-red-50 border-b border-red-200 text-red-700"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="h-5 w-5 mr-2 text-[#ff006a]"
+        class="h-5 w-5 mr-2 text-red-500"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -59,15 +59,15 @@
     </div>
 
     <!-- Editor container -->
-    <div class="flex-grow flex flex-col relative bg-gradient-to-br from-black/80 to-[#0a0a2a]/80">
+    <div class="flex-grow flex flex-col relative bg-gradient-to-br from-white to-slate-50">
       <div
         v-if="!isDataLoaded && !isLoading && !hasError"
-        class="absolute inset-0 flex flex-col z-[10] items-center justify-center text-[#00f0ff] bg-black/50 backdrop-blur-sm"
+        class="absolute inset-0 flex flex-col z-[10] items-center justify-center text-[#005188] bg-white/80 backdrop-blur-sm"
       >
         <div class="relative mb-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-16 w-16 text-[#00f0ff]"
+            class="h-16 w-16 text-[#005188]"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -77,20 +77,19 @@
               stroke-linejoin="round"
               stroke-width="1.5"
               d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              style="filter: drop-shadow(0 0 8px #00f0ff)"
             />
           </svg>
         </div>
-        <p class="text-center font-mono text-xl animate-text-glitch">
+        <p class="text-center font-mono text-xl text-gray-700">
           [ SYSTEM READY ]<br />
-          <span class="text-sm text-[#d000ff]">SELECT BLOCK</span>
+          <span class="text-sm text-[#007C52]">SELECT BLOCK</span>
         </p>
       </div>
 
       <div v-else
-        class="absolute inset-0 border-[1px] border-[#00f0ff33] shadow-[inset_0_0_30px_rgba(0,240,255,0.1)]"
+        class="absolute inset-0 border border-[#005188]/20 shadow-xl shadow-[#005188]/10 rounded-lg m-2 bg-white/50 backdrop-blur-sm"
       >
-        <div ref="editorContainer" class="h-full w-full neon-editor"></div>
+        <div ref="editorContainer" class="h-full w-full modern-editor"></div>
       </div>
     </div>
   </div>
@@ -102,7 +101,6 @@ import { useJsonDataStore } from '@/stores/block'
 import { Path } from '@/stores/path'
 import { storeToRefs } from 'pinia'
 import { EditorView, basicSetup } from 'codemirror'
-import { oneDark } from '@codemirror/theme-one-dark'
 import { StreamLanguage } from '@codemirror/language'
 import { nginx } from '@codemirror/legacy-modes/mode/nginx'
 import { debounce } from 'lodash-es'
@@ -127,8 +125,6 @@ const isDataLoaded = computed(() => jsonData.value !== null && jsonData.value.su
 function refreshData() {
   jsonDataStore.fetchJsonData(info.info.sectionId, info.info.store_number)
 }
-
-
 
 // Properly handles optional/invalid directives
 function parseDirective(data: any, indent = 0): string {
@@ -293,7 +289,6 @@ function save() {
       jsonDataStore.updateJsonData(info.info.store_number, info.info.sectionId, content)
       isUpdatingFromEditor = true
       jsonData.value.json_data = JSON.stringify(parseNginxBlock(content))
-      //isUpdatingFromEditor = false
     } catch (e) {
       console.error('Manual save failed:', e)
     }
@@ -307,7 +302,6 @@ const debouncedUpdate = debounce((content: string) => {
       jsonDataStore.updateJsonData(info.info.store_number, info.info.sectionId, content)
       isUpdatingFromEditor = true
       jsonData.value.json_data = JSON.stringify(parseNginxBlock(content))
-      //isUpdatingFromEditor = false
     } catch (e) {
       console.error('Live update failed:', e)
     }
@@ -333,7 +327,6 @@ onMounted(() => {
     extensions: [
       basicSetup,
       nginxLanguage,
-      oneDark,
       EditorView.updateListener.of((update) => {
         if (update.docChanged && !isProgrammaticChange) {
           const content = update.state.doc.toString()
@@ -344,14 +337,16 @@ onMounted(() => {
         '&': {
           height: '100%',
           fontSize: '14px',
-          fontFamily: '"Fira Code", monospace',
+          fontFamily: '"Fira Code", "JetBrains Mono", monospace',
           textAlign: 'left',
+          backgroundColor: '#fefefe',
           '& .cm-content': {
-            fontFamily: '"Fira Code", monospace',
+            fontFamily: '"Fira Code", "JetBrains Mono", monospace',
             textAlign: 'left',
             paddingLeft: '10px',
             paddingTop: '5px',
             paddingBottom: '5px',
+            color: '#1e293b',
           },
           '& .cm-line': {
             textAlign: 'left',
@@ -360,35 +355,46 @@ onMounted(() => {
           },
         },
         '.cm-gutters': {
-          backgroundColor: 'rgba(0, 0, 0, 0.3) !important',
-          color: 'rgba(0, 240, 255, 0.5) !important',
+          backgroundColor: '#f8fafc !important',
+          color: '#64748b !important',
           border: 'none !important',
-          borderRight: '1px solid rgba(0, 240, 255, 0.2) !important',
+          borderRight: '1px solid #e2e8f0 !important',
         },
         '.cm-activeLineGutter': {
-          backgroundColor: 'rgba(0, 240, 255, 0.1) !important',
-          color: '#00f0ff !important',
+          backgroundColor: '#e0f2fe !important',
+          color: '#005188 !important',
+          fontWeight: 'bold',
         },
         '.cm-activeLine': {
-          backgroundColor: 'rgba(0, 240, 255, 0.05) !important',
-          borderLeft: '2px solid #00f0ff',
+          backgroundColor: '#f0f9ff !important',
+          borderLeft: '3px solid #005188',
         },
         '.cm-cursor': {
-          borderLeft: '2px solid #00f0ff !important',
-          boxShadow: '0 0 8px #00f0ff',
+          borderLeft: '2px solid #005188 !important',
         },
         '.cm-content': {
-          caretColor: '#00f0ff',
+          caretColor: '#005188',
         },
         '.cm-scroller': {
           overflow: 'auto',
+          fontFamily: '"Fira Code", "JetBrains Mono", monospace',
         },
         '.cm-selectionBackground': {
-          backgroundColor: 'rgba(0, 240, 255, 0.15) !important',
+          backgroundColor: 'rgba(0, 124, 82, 0.2) !important',
         },
         '.cm-matchingBracket': {
-          backgroundColor: 'rgba(0, 240, 255, 0.2) !important',
-          color: '#00f0ff !important',
+          backgroundColor: 'rgba(0, 81, 136, 0.1) !important',
+          color: '#005188 !important',
+          fontWeight: 'bold',
+        },
+        '.cm-searchMatch': {
+          backgroundColor: 'rgba(0, 124, 82, 0.2) !important',
+        },
+        '.cm-focused': {
+          outline: 'none',
+        },
+        '.cm-editor.cm-focused': {
+          outline: 'none',
         },
       }),
     ],
@@ -443,16 +449,19 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
-.neon-editor {
-  --cm-background: #000000;
-  --cm-foreground: #00f0ff;
-  --cm-gutter-background: #00000090;
-  --cm-cursor: #00f0ff;
-  --cm-selection: #00f0ff30;
+.modern-editor {
+  --cm-background: #fefefe;
+  --cm-foreground: #1e293b;
+  --cm-gutter-background: #f8fafc;
+  --cm-cursor: #005188;
+  --cm-selection: rgba(0, 124, 82, 0.2);
 }
+
 .cm-editor {
   background: var(--cm-background) !important;
-  font-family: 'Orbitron', monospace !important;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace !important;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
 .cm-content {
@@ -462,46 +471,27 @@ onBeforeUnmount(() => {
 
 .cm-gutters {
   background: var(--cm-gutter-background) !important;
-  border-right: 1px solid #00f0ff33 !important;
+  border-right: 1px solid #e2e8f0 !important;
 }
 
 .cm-activeLine {
-  background: #00f0ff10 !important;
+  background-color: transparent !important;
+  background: #f0f9ff !important;
+  border-left: 3px solid #005188 !important;
+  mix-blend-mode: multiply; /* allows selection color to blend */
 }
 
 .cm-selectionBackground {
   background: var(--cm-selection) !important;
+  
 }
 
-/* Animations */
-@keyframes pulse-fast {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+/* Button hover effects */
+button:hover {
+  transform: translateY(-1px);
 }
 
-@keyframes text-glitch {
-  0% {
-    text-shadow:
-      2px 0 0 #ff00c1,
-      -2px 0 0 #00fff9;
-  }
-  100% {
-    text-shadow:
-      -2px 0 0 #ff00c1,
-      2px 0 0 #00fff9;
-  }
-}
-
-.animate-pulse-fast {
-  animation: pulse-fast 1s infinite;
-}
-
-.animate-text-glitch {
-  animation: text-glitch 0.3s infinite alternate;
+button:active {
+  transform: translateY(0px);
 }
 </style>
