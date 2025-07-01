@@ -102,7 +102,7 @@ import { Path } from '@/stores/path'
 import { storeToRefs } from 'pinia'
 import { EditorView, basicSetup } from 'codemirror'
 import { StreamLanguage } from '@codemirror/language'
-import { nginx } from '@codemirror/legacy-modes/mode/nginx'
+import { nginx } from '@codemirror/legacy-modes/mode/services/nginx'
 import { debounce } from 'lodash-es'
 
 // CodeMirror config
@@ -483,7 +483,7 @@ onBeforeUnmount(() => {
 
 .cm-selectionBackground {
   background: var(--cm-selection) !important;
-  
+
 }
 
 /* Button hover effects */

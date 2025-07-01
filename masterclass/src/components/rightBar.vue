@@ -6,7 +6,7 @@ import { ref, onMounted, computed, onBeforeMount, onBeforeUnmount, watch } from 
 import { useRouter, useRoute } from 'vue-router'
 import { Path } from '@/stores/path'
 import { API } from '@/config/index'
-import { useRightSidebarStore } from '@/stores/sidebar.ts'
+import { useRightSidebarStore } from '@/stores/site/sidebar/sidebar'
 import { storeToRefs } from 'pinia'
 const info = Path()
 import { useJsonDataStore } from '@/stores/block'
@@ -643,7 +643,7 @@ watch(
               <!-- Button content -->
               <div @click="
                 navigateTo(
-                  `/dashboard/config?block_id=${path.info.service}&section_id=${encodeURIComponent(path.info.sectionId)}&store_id=${row.title}&store_number=${row.id}`,
+                  `/site/config?block_id=${path.info.service}&section_id=${encodeURIComponent(path.info.sectionId)}&store_id=${row.title}&store_number=${row.id}`,
                 )
                 " class="relative z-10 flex flex-col items-center top-0.5 space-y-3">
                 <div class="bg-gray-100 rounded-md px-3 py-1 border border-gray-200">

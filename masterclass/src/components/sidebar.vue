@@ -10,7 +10,7 @@ import {
   ServerIcon,
 } from '@heroicons/vue/24/outline'
 import { Terminal, Code, Database, HardDriveUpload  } from 'lucide-vue-next'
-import { useSidebarStore } from '@/stores/sidebar'
+import { useSidebarStore } from '@/stores/site/sidebar/sidebar'
 import { storeToRefs } from 'pinia'
 const sidebarState = useSidebarStore()
 const { isOpen } = storeToRefs(sidebarState)
@@ -60,10 +60,10 @@ type MenuItem = {
 }
 
 const menuItems = reactive<MenuItem[]>([
-  { title: 'Dashboard', icon: 'dashboard', path: '/dashboard', active: true },
-  { title: 'Profile', icon: 'profile', path: '/dashboard/profile', active: false },
-  { title: 'Settings', icon: 'settings', path: '/dashboard/settings', active: false },
-  { title: 'Analytics', icon: 'analytics', path: '/dashboard/analytics', active: false },
+  { title: 'Dashboard', icon: 'dashboard', path: '/site', active: true },
+  { title: 'Profile', icon: 'profile', path: '/site/profile', active: false },
+  { title: 'Settings', icon: 'settings', path: '/site/settings', active: false },
+  { title: 'Analytics', icon: 'analytics', path: '/site/analytics', active: false },
   {
     title: 'Services',
     icon: 'servers',
@@ -71,10 +71,10 @@ const menuItems = reactive<MenuItem[]>([
     isDropdown: true,
     open: false,
     children: [
-      { title: 'NGINX', path: '/dashboard/nginx', icon: 'nginx', active: false },
-      { title: 'RSNAPSHOT', path: '/dashboard/rsnapshot', icon: 'rsnapshot', active: false },
-      { title: 'PHP-FPM', path: '/dashboard/phpfpm', icon: 'php', active: false },
-      { title: 'MariDb', path: '/dashboard/MariDb', icon: 'MariDb', active: false },
+      { title: 'NGINX', path: '/services/nginx', icon: 'nginx', active: false },
+      { title: 'RSNAPSHOT', path: '/services/rsnapshot', icon: 'rsnapshot', active: false },
+      { title: 'PHP-FPM', path: '/site/phpfpm', icon: 'php', active: false },
+      { title: 'MariDb', path: '/site/MariDb', icon: 'MariDb', active: false },
     ],
   },
 ])
