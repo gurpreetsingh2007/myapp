@@ -2,9 +2,9 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useSidebarStore } from '@/stores/sidebar'
+import { useSidebarStore } from '@/stores/site/sidebar/sidebar'
 import { ArrowLeftIcon, HomeIcon } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '@/stores/auth.ts'
+import { useAuthStore } from '@/stores/site/login/auth'
 import { useUserStore } from '@/stores/user'
 import { useBreadcrumbStore, Title } from '@/stores/path'
 import { API } from '@/config/index'
@@ -236,7 +236,7 @@ onUnmounted(() => {
                 Back
               </button>
               <RouterLink
-                to="/dashboard"
+                to="/site"
                 @click="toggleActionMenu"
                 class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
               >
@@ -264,7 +264,7 @@ onUnmounted(() => {
 
         <!-- Home button -->
         <RouterLink
-          to="/dashboard"
+          to="/site"
           class="hidden sm:flex p-2 sm:p-2.5 rounded-lg bg-gradient-to-br from-[#005188]/10 to-[#007C52]/10 border border-[#005188]/20 text-[#005188] transition-all hover:bg-gradient-to-br hover:from-[#005188]/20 hover:to-[#007C52]/20 hover:-translate-y-0.5 hover:shadow-lg duration-300 ease-in-out relative group"
         >
           <HomeIcon class="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
@@ -312,13 +312,13 @@ onUnmounted(() => {
           >
             <div class="py-2">
               <RouterLink
-                to="/dashboard/profile"
+                to="/site/profile"
                 class="block px-4 py-2 text-sm text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
               >
                 Profile
               </RouterLink>
               <RouterLink
-                to="/dashboard/settings"
+                to="/site/settings"
                 class="block px-4 py-2 text-sm text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
               >
                 Settings

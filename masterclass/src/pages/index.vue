@@ -98,7 +98,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import forge from 'node-forge'
 import { API } from '@/config/index'
-import { useAuthStore } from '@/stores/auth.ts'
+import { useAuthStore } from '@/stores/site/login/auth'
 import { useUserStore } from '@/stores/user'
 const userStore = useUserStore()
 
@@ -182,7 +182,7 @@ const handleLogin = async () => {
       //console.log(sessionStorage.getItem('csrf_token'))
       authStore.setToken(data.csrf_token)
       userStore.setUser(data.username, username.value)
-      router.push('/dashboard')
+      router.push('/site')
     } else {
       loginError.value = true
       errorMessage.value = data.message || 'Login failed.'

@@ -14,10 +14,10 @@ const iconMap = {
 }
 
 const menuItems = [
-  { title: 'NGINX', path: '/dashboard/nginx', icon: 'nginx' },
-  { title: 'RSNAPSHOT', path: '/dashboard/rsnapshot', icon: 'rsnapshot' },
-  { title: 'PHP-FPM', path: '/dashboard/phpfpm', icon: 'php' },
-  { title: 'MARIA DB', path: '/dashboard/MariaDB', icon: 'MariDb' },
+  { title: 'NGINX', path: '/services/nginx', icon: 'nginx' },
+  { title: 'RSNAPSHOT', path: '/services/rsnapshot', icon: 'rsnapshot' },
+  { title: 'PHP-FPM', path: '/site/phpfpm', icon: 'php' },
+  { title: 'MARIA DB', path: '/site/MariaDB', icon: 'MariDb' },
 ]
 
 const servers = ref<{ clientId: string; remoteAddress: string }[]>([])

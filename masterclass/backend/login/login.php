@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../keys/keys.php';
-require_once __DIR__ . '/../db/config.php';
+
+require_once 'ldap.php';
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -28,11 +29,11 @@ function mainLogin($data)
         return;
     }
 
-    $authResult = true; // Placeholder
-
+    $authResult = ldap_authenticate($username, $password); // Placeholder
+    
     $exitDatetime = date('Y-m-d H:i:s');
 
-    if ($authResult) {
+    if ($authResult['success']) {
         session_regenerate_id(true);
         $_SESSION['username'] = ucwords(str_replace('.', ' ', explode('@', $username)[0]));
         $_SESSION['email'] = $username;
@@ -60,7 +61,7 @@ function mainLogin($data)
         ]);
 
         // ? Log success
-        addLogRow($_SESSION['username'], $_SESSION['email'], 'login', true);
+       // addLogRow($_SESSION['username'], $_SESSION['email'], 'login', true);
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -73,7 +74,7 @@ function mainLogin($data)
         logFailedAttempt($username);
 
         // ? Log failed attempt
-        addLogRow($username, $username, 'login', false);
+        //addLogRow($username, $username, 'login', false);
 
         echo json_encode(["success" => false, "message" => "Invalid credentials"]);
     }
@@ -133,7 +134,7 @@ function EXIT_FUNC()
     $exitDatetime = date('Y-m-d H:i:s');
     $success = true;
 
-    addLogRow($editorName, $editorGmail, 'exit', $success);
+   // addLogRow($editorName, $editorGmail, 'exit', $success);
 
     $_SESSION = [];
     if (ini_get("session.use_cookies")) {

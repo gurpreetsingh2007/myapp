@@ -46,6 +46,7 @@ func main() {
     clientKeyPath := flag.String("key", "goCert/client.key", "Client key file")
     flag.Parse()
 
+
     caCertPEM, err := ioutil.ReadFile(*caCertPath)
     if err != nil {
         log.Fatalf("Failed to read CA file: %v", err)
