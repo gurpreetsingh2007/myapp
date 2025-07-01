@@ -20,12 +20,16 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...catchAll]': RouteRecordInfo<'/[...catchAll]', '/:catchAll(.*)', { catchAll: ParamValue<true> }, { catchAll: ParamValue<false> }>,
-    '/services/nginx/': RouteRecordInfo<'/services/nginx/', '/services/nginx', Record<never, never>, Record<never, never>>,
-    '/services/nginx/certificates': RouteRecordInfo<'/services/nginx/certificates', '/services/nginx/certificates', Record<never, never>, Record<never, never>>,
-    '/services/nginx/servers': RouteRecordInfo<'/services/nginx/servers', '/services/nginx/servers', Record<never, never>, Record<never, never>>,
-    '/services/rsnapshot/': RouteRecordInfo<'/services/rsnapshot/', '/services/rsnapshot', Record<never, never>, Record<never, never>>,
-    '/site/': RouteRecordInfo<'/site/', '/site', Record<never, never>, Record<never, never>>,
-    '/site/analytics/': RouteRecordInfo<'/site/analytics/', '/site/analytics', Record<never, never>, Record<never, never>>,
-    '/site/profile/': RouteRecordInfo<'/site/profile/', '/site/profile', Record<never, never>, Record<never, never>>,
+    '/certificates': RouteRecordInfo<'/certificates', '/certificates', Record<never, never>, Record<never, never>>,
+    '/dashboard/': RouteRecordInfo<'/dashboard/', '/dashboard', Record<never, never>, Record<never, never>>,
+    '/dashboard/analytics': RouteRecordInfo<'/dashboard/analytics', '/dashboard/analytics', Record<never, never>, Record<never, never>>,
+    '/dashboard/config': RouteRecordInfo<'/dashboard/config', '/dashboard/config', Record<never, never>, Record<never, never>>,
+    '/dashboard/dashboard/': RouteRecordInfo<'/dashboard/dashboard/', '/dashboard/dashboard', Record<never, never>, Record<never, never>>,
+    '/dashboard/Nginx': RouteRecordInfo<'/dashboard/Nginx', '/dashboard/Nginx', Record<never, never>, Record<never, never>>,
+    '/dashboard/profile': RouteRecordInfo<'/dashboard/profile', '/dashboard/profile', Record<never, never>, Record<never, never>>,
+    '/dashboard/profile/': RouteRecordInfo<'/dashboard/profile/', '/dashboard/profile', Record<never, never>, Record<never, never>>,
+    '/dashboard/rsnapshot': RouteRecordInfo<'/dashboard/rsnapshot', '/dashboard/rsnapshot', Record<never, never>, Record<never, never>>,
+    '/dashboard/servers': RouteRecordInfo<'/dashboard/servers', '/dashboard/servers', Record<never, never>, Record<never, never>>,
+    '/dashboard/settings': RouteRecordInfo<'/dashboard/settings', '/dashboard/settings', Record<never, never>, Record<never, never>>,
   }
 }

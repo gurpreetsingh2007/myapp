@@ -1,669 +1,276 @@
 <?php
-session_start();
-require_once 'NginxReverseProxyDB.php';
 
-class NginxConfigLoader
+define('DB_HOST', '172.21.229.219');
+define('DB_USER', 'gurpreet');
+define('DB_PASS', 'gurpreet');
+define('DB_NAME', 'nginx');
+define('DB_PORT', 3306);
+
+function getDbConnectionNginx()
 {
-    private $db;
-
-    public function __construct()
-    {
-        $this->db = new NginxReverseProxyDB();
-    }
-
-    public function loadCertificatesFromJson($jsonFile)
-    {
-        $jsonData = file_get_contents($jsonFile);
-        $certificates = json_decode($jsonData, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Invalid JSON format in certificate file: " . json_last_error_msg());
-        }
-
-        $existingCerts = $this->db->getCertificates();
-
-        foreach ($certificates as $cert) {
-            $certPath = trim($cert['cert_path']);
-            $keyPath = trim($cert['key_path']);
-
-            $duplicate = false;
-            foreach ($existingCerts as $existing) {
-                if ($existing['cert_path'] === $certPath && $existing['key_path'] === $keyPath) {
-                    echo "Skipping duplicate certificate: {$certPath}\n";
-                    $duplicate = true;
-                    break;
-                }
-            }
-            if ($duplicate)
-                continue;
-
-            $certData = [
-                'cert_name' => $cert['cert_name'],
-                'cert_path' => $certPath,
-                'key_path' => $keyPath,
-                'issuer' => trim($cert['issuer']),
-                'subject' => trim($cert['subject']),
-                'valid_from' => ($from = strtotime(trim($cert['valid_from']))) ? date('Y-m-d H:i:s', $from) : null,
-                'valid_to' => ($to = strtotime(trim($cert['valid_to']))) ? date('Y-m-d H:i:s', $to) : null,
-                'serial_number' => trim($cert['serial_number']),
-                'fingerprint' => trim($cert['fingerprint']),
-                'algorithm' => trim($cert['algorithm']),
-                'key_size' => (int) preg_replace('/[^0-9]/', '', $cert['key_size']),
-                'is_self_signed' => isset($cert['is_self_signed']) ? (int) $cert['is_self_signed'] : 0,
-                'notes' => 'Loaded from JSON config'
-            ];
-
-            $this->db->addCertificate($certData);
-        }
-    }
-
-    private function serverExists($serverName, $port)
-    {
-        $servers = $this->db->getReverseProxyServers();
-        foreach ($servers as $server) {
-            if ($server['server_name'] === $serverName && $server['port'] == $port) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function loadServersFromJson($jsonFile)
-    {
-        $jsonData = file_get_contents($jsonFile);
-        $config = json_decode($jsonData, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Invalid JSON format in server config file: " . json_last_error_msg());
-        }
-
-        foreach ($config['servers'] as $server) {
-            $serverName = trim($server['server_name']);
-            $port = (int) $server['port'];
-
-            if ($this->serverExists($serverName, $port)) {
-                echo "Server already exists: {$serverName}:{$port}\n";
-                continue;
-            }
-
-            $sslCertId = null;
-            if (!empty($server['ssl_enabled']) && !empty($server['ssl_certificate'])) {
-                $certPath = trim($server['ssl_certificate']);
-                $keyPath = trim($server['ssl_certificate_key']);
-
-                $certs = $this->db->getCertificates();
-                foreach ($certs as $cert) {
-                    if ($cert['cert_path'] === $certPath && $cert['key_path'] === $keyPath) {
-                        $sslCertId = $cert['cert_id'];
-                        break;
-                    }
-                }
-
-                if (!$sslCertId) {
-                    $certData = [
-                        'cert_name' => basename($certPath),
-                        'cert_path' => $certPath,
-                        'key_path' => $keyPath,
-                        'issuer' => 'Unknown (from server config)',
-                        'subject' => 'Unknown (from server config)',
-                        'valid_from' => null,
-                        'valid_to' => null,
-                        'serial_number' => '',
-                        'fingerprint' => '',
-                        'algorithm' => '',
-                        'key_size' => 0,
-                        'is_self_signed' => 0,
-                        'notes' => 'Auto-created from server config'
-                    ];
-                    $this->db->addCertificate($certData);
-
-                    $certs = $this->db->getCertificates();
-                    foreach ($certs as $cert) {
-                        if ($cert['cert_path'] === $certPath && $cert['key_path'] === $keyPath) {
-                            $sslCertId = $cert['cert_id'];
-                            break;
-                        }
-                    }
-                }
-            }
-
-            $serverTitle = substr(trim($serverName), 0, 50);
-            $serverId = $this->db->addReverseProxyServer(
-                $serverTitle,
-                $port,
-                $serverName,
-                $sslCertId,
-                [
-                    'is_http2' => !empty($server['ssl_enabled']) ? 1 : 0,
-                    'is_websocket_enabled' => 0,
-                ]
-            );
-
-            foreach ($server['directives'] as $directive) {
-                $directive['name'] = trim($directive['name']);
-                $directive['value'] = trim($directive['value']);
-                $this->addParameterToServerOrLocation($directive, $serverId);
-            }
-
-            foreach ($server['locations'] as $location) {
-                $location['proxy_pass'] = trim($location['proxy_pass']);
-                $locationId = $this->db->addLocation(
-                    $location['path'],
-                    $location['proxy_pass']
-                );
-
-                $this->addLocationToServerUnique($serverId, $locationId, count($server['locations']));
-
-                foreach ($location['directives'] as $directive) {
-                    $directive['name'] = trim($directive['name']);
-                    $directive['value'] = trim($directive['value']);
-                    $this->addParameterToServerOrLocation($directive, $serverId, $locationId);
-                }
-            }
-        }
-    }
-
-    public function getAllServersForAPI()
-    {
-        $servers = $this->db->getReverseProxyServers();
-        $result = [];
-
-        foreach ($servers as $server) {
-            $serverConfig = $this->db->getServerConfig($server['server_id']);
-
-            $directives = [];
-            if (!empty($serverConfig['parameters'])) {
-                foreach ($serverConfig['parameters'] as $param) {
-                    $directives[] = [
-                        'name' => $param['param_name'],
-                        'value' => $param['param_value']
-                    ];
-                }
-            }
-
-            $locations = [];
-            if (!empty($serverConfig['locations'])) {
-                foreach ($serverConfig['locations'] as $location) {
-                    $locationDirectives = [];
-                    if (!empty($location['parameters'])) {
-                        foreach ($location['parameters'] as $param) {
-                            $locationDirectives[] = [
-                                'name' => $param['param_name'],
-                                'value' => $param['param_value']
-                            ];
-                        }
-                    }
-
-                    $locations[] = [
-                        'location_id' => $location['location_id'],
-                        'path' => $location['path_pattern'],
-                        'proxy_pass' => $location['proxy_to'],
-                        'directives' => $locationDirectives
-                    ];
-                }
-            }
-
-            $sslEnabled = !empty($serverConfig['ssl_cert_id']);
-            $sslCertificate = '';
-            $sslCertificateKey = '';
-
-            if ($sslEnabled && !empty($serverConfig['certificate'])) {
-                $sslCertificate = $serverConfig['certificate']['cert_path'];
-                $sslCertificateKey = $serverConfig['certificate']['key_path'];
-            }
-
-            $result[] = [
-                'server_id' => $server['server_id'],
-                'server_name' => $server['server_name'],
-                'server_title' => $server['server_title'],
-                'port' => (int) $server['port'],
-                'ssl_enabled' => $sslEnabled,
-                'ssl_certificate' => $sslCertificate,
-                'ssl_certificate_key' => $sslCertificateKey,
-                'ssl_client_certificate' => '',
-                'ssl_verify_client' => 'off',
-                'is_mtls' => false,
-                'is_http2' => (bool) $server['is_http2'],
-                'is_websocket_enabled' => (bool) $server['is_websocket_enabled'],
-                'directives' => $directives,
-                'locations' => $locations
-            ];
-        }
-
-        return $result;
-    }
-
-    public function addServerFromAPI($serverData)
-    {
-        try {
-            $serverName = $serverData['server_name'];
-            $port = (int) $serverData['port'];
-
-            if ($this->serverExists($serverName, $port)) {
-                return [
-                    'success' => false,
-                    'error' => "Server already exists: {$serverName}:{$port}"
-                ];
-            }
-
-            $sslCertId = null;
-            if (!empty($serverData['ssl_enabled']) && !empty($serverData['ssl_certificate'])) {
-                $sslCertId = $this->findOrCreateCertificate(
-                    $serverData['ssl_certificate'],
-                    $serverData['ssl_certificate_key']
-                );
-            }
-
-            $serverTitle = substr(trim($serverName), 0, 50);
-            $serverId = $this->db->addReverseProxyServer(
-                $serverTitle,
-                $port,
-                $serverName,
-                $sslCertId,
-                [
-                    'is_http2' => !empty($serverData['ssl_enabled']) ? 1 : 0,
-                    'is_websocket_enabled' => !empty($serverData['is_websocket_enabled']) ? 1 : 0,
-                ]
-            );
-
-            if (!empty($serverData['directives'])) {
-                foreach ($serverData['directives'] as $directive) {
-                    $this->addParameterToServerOrLocation($directive, $serverId);
-                }
-            }
-
-            if (!empty($serverData['locations'])) {
-                foreach ($serverData['locations'] as $index => $location) {
-                    $locationId = $this->db->addLocation(
-                        $location['path'],
-                        $location['proxy_pass']
-                    );
-
-                    $this->addLocationToServerUnique($serverId, $locationId, $index + 1);
-
-                    if (!empty($location['directives'])) {
-                        foreach ($location['directives'] as $directive) {
-                            $this->addParameterToServerOrLocation($directive, $serverId, $locationId);
-                        }
-                    }
-                }
-            }
-
-            return [
-                'success' => true,
-                'server_id' => $serverId,
-                'message' => 'Server created successfully'
-            ];
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function updateServerFromAPI($serverId, $serverData)
-    {
-        try {
-            $sslCertId = null;
-            if (!empty($serverData['ssl_enabled']) && !empty($serverData['ssl_certificate'])) {
-                $sslCertId = $this->findOrCreateCertificate(
-                    $serverData['ssl_certificate'],
-                    $serverData['ssl_certificate_key']
-                );
-            }
-
-            $updateData = [];
-            if (isset($serverData['server_title'])) {
-                $updateData['server_title'] = $serverData['server_title'];
-            }
-            if (isset($serverData['server_name'])) {
-                $updateData['server_name'] = $serverData['server_name'];
-            }
-            if (isset($serverData['port'])) {
-                $updateData['port'] = (int) $serverData['port'];
-            }
-            if (isset($sslCertId)) {
-                $updateData['ssl_cert_id'] = $sslCertId;
-            }
-            $updateData['is_http2'] = !empty($serverData['ssl_enabled']) ? 1 : 0;
-            $updateData['is_websocket_enabled'] = !empty($serverData['is_websocket_enabled']) ? 1 : 0;
-
-            $this->db->updateServer($serverId, $updateData);
-
-            return [
-                'success' => true,
-                'message' => 'Server updated successfully'
-            ];
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function deleteServerFromAPI($serverId)
-    {
-        try {
-            $result = $this->db->deleteServer($serverId);
-
-            if ($result) {
-                return [
-                    'success' => true,
-                    'message' => 'Server deleted successfully'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to delete server'
-                ];
-            }
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function getAllCertificatesForAPI()
-    {
-        $certificates = $this->db->getCertificates();
-        $result = [];
-
-        foreach ($certificates as $cert) {
-            $result[] = [
-                'cert_id' => $cert['cert_id'],
-                'cert_name' => $cert['cert_name'],
-                'cert_path' => $cert['cert_path'],
-                'key_path' => $cert['key_path'],
-                'issuer' => $cert['issuer'],
-                'subject' => $cert['subject'],
-                'valid_from' => $cert['valid_from'],
-                'valid_to' => $cert['valid_to'],
-                'serial_number' => $cert['serial_number'],
-                'fingerprint' => $cert['fingerprint'],
-                'algorithm' => $cert['algorithm'],
-                'key_size' => $cert['key_size'],
-                'is_self_signed' => (bool) $cert['is_self_signed'],
-                'notes' => $cert['notes']
-            ];
-        }
-
-        return $result;
-    }
-
-    public function addCertificateFromAPI($certData)
-    {
-        try {
-            $certId = $this->db->addCertificate($certData);
-
-            return [
-                'success' => true,
-                'cert_id' => $certId,
-                'message' => 'Certificate added successfully'
-            ];
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function updateCertificateFromAPI($certId, $certData)
-    {
-        try {
-            $result = $this->db->updateCertificate($certId, $certData);
-
-            if ($result) {
-                return [
-                    'success' => true,
-                    'message' => 'Certificate updated successfully'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to update certificate'
-                ];
-            }
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function deleteCertificateFromAPI($certId)
-    {
-        try {
-            $result = $this->db->deleteCertificate($certId);
-
-            if ($result) {
-                return [
-                    'success' => true,
-                    'message' => 'Certificate deleted successfully'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to delete certificate'
-                ];
-            }
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function getLocationParametersForAPI()
-    {
-        $sql = "SELECT DISTINCT p.param_name, p.param_value, p.description
-                FROM params p
-                INNER JOIN location_params lp ON p.param_id = lp.param_id
-                ORDER BY p.param_name, p.param_value";
-
-        $stmt = $this->db->getConnection()->query($sql);
-        $results = $stmt->fetchAll();
-
-        $parameters = [];
-        foreach ($results as $param) {
-            $parameters[] = [
-                'name' => $param['param_name'],
-                'value' => $param['param_value'],
-                'description' => $param['description']
-            ];
-        }
-
-        return $parameters;
-    }
-
-    public function getAllParametersForAPI()
-    {
-        $parameters = $this->db->getParameters();
-        $result = [];
-
-        foreach ($parameters as $param) {
-            $result[] = [
-                'param_id' => $param['param_id'],
-                'param_name' => $param['param_name'],
-                'param_value' => $param['param_value'],
-                'description' => $param['description'],
-                'is_common' => (bool) $param['is_common']
-            ];
-        }
-
-        return $result;
-    }
-
-    public function addParameterFromAPI($paramData)
-    {
-        try {
-            $result = $this->db->addParameter(
-                $paramData['param_name'],
-                $paramData['param_value'],
-                $paramData['description'] ?? '',
-                $paramData['is_common'] ?? true
-            );
-
-            if ($result) {
-                return [
-                    'success' => true,
-                    'message' => 'Parameter added successfully'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to add parameter'
-                ];
-            }
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    private function findOrCreateCertificate($certPath, $keyPath)
-    {
-        $certs = $this->db->getCertificates();
-        foreach ($certs as $cert) {
-            if ($cert['cert_path'] === $certPath && $cert['key_path'] === $keyPath) {
-                return $cert['cert_id'];
-            }
-        }
-
-        $certData = [
-            'cert_name' => basename($certPath),
-            'cert_path' => $certPath,
-            'key_path' => $keyPath,
-            'issuer' => 'Unknown (auto-created)',
-            'subject' => 'Unknown (auto-created)',
-            'valid_from' => null,
-            'valid_to' => null,
-            'serial_number' => '',
-            'fingerprint' => '',
-            'algorithm' => '',
-            'key_size' => 0,
-            'is_self_signed' => 0,
-            'notes' => 'Auto-created from API request'
-        ];
-
-        return $this->db->addCertificate($certData);
-    }
-
-    private function addLocationToServerUnique($serverId, $locationId, $order)
-    {
-        $existing = $this->db->getConnection()->prepare(
-            "SELECT 1 FROM server_locations WHERE server_id = ? AND location_id = ?"
+    try {
+        $conn = new PDO(
+            "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";port=" . DB_PORT,
+            DB_USER,
+            DB_PASS,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+            ]
         );
-        $existing->execute([$serverId, $locationId]);
-        if (!$existing->fetch()) {
-            $this->db->addLocationToServer($serverId, $locationId);
-        }
-    }
-
-    private function addParameterToServerOrLocation($directive, $serverId, $locationId = null)
-    {
-        $params = $this->db->getParameters();
-        $paramId = null;
-
-        foreach ($params as $param) {
-            if ($param['param_name'] === $directive['name'] && $param['param_value'] === $directive['value']) {
-                $paramId = $param['param_id'];
-                break;
-            }
-        }
-
-        if (!$paramId) {
-            $this->db->addParameter(
-                $directive['name'],
-                $directive['value'],
-                'Auto-created from server config'
-            );
-
-            $params = $this->db->getParameters();
-            foreach ($params as $param) {
-                if ($param['param_name'] === $directive['name'] && $param['param_value'] === $directive['value']) {
-                    $paramId = $param['param_id'];
-                    break;
-                }
-            }
-        }
-
-        if ($locationId) {
-            $this->addParamToLocationUnique($locationId, $paramId);
-        } else {
-            $this->addParamToServerUnique($serverId, $paramId);
-        }
-    }
-
-    private function addParamToServerUnique($serverId, $paramId)
-    {
-        $existing = $this->db->getConnection()->prepare(
-            "SELECT 1 FROM server_params WHERE server_id = ? AND param_id = ?"
-        );
-        $existing->execute([$serverId, $paramId]);
-        if (!$existing->fetch()) {
-            $this->db->addParameterToServer($serverId, $paramId);
-        }
-    }
-
-    private function addParamToLocationUnique($locationId, $paramId)
-    {
-        $existing = $this->db->getConnection()->prepare(
-            "SELECT 1 FROM location_params WHERE location_id = ? AND param_id = ?"
-        );
-        $existing->execute([$locationId, $paramId]);
-        if (!$existing->fetch()) {
-            $this->db->addParameterToLocation($locationId, $paramId);
-        }
-    }
-
-    public function searchHistory($searchQuery, $offset = 0, $limit = 10)
-    {
-        try {
-            $results = $this->db->searchHistory(
-                trim($searchQuery),
-                (int) $offset,
-                (int) $limit
-            );
-
-            return [
-                'success' => true,
-                'data' => $results
-            ];
-
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
+        return $conn;
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage());
     }
 }
-// Example usage
-// try {
-//     $loader = new NginxConfigLoader();
 
-//     $loader->loadCertificatesFromJson('certificates.json');
-//     echo "Certificates loaded successfully.\n";
+function convertDateTime($datetime)
+{
+    if (empty($datetime) || $datetime === 'unknown') {
+        return null;
+    }
+    try {
+        return (new DateTime($datetime))->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return null;
+    }
+}
 
-//     $loader->loadServersFromJson('servers.json');
-//     echo "Server configurations loaded successfully.\n";
+function normalizeFileType($fileType) {
+    // Handle empty/unknown cases first
+    if (empty($fileType)) {
+        return 'config';
+    }
 
-// } catch (Exception $e) {
-//     echo "? Error: " . $e->getMessage() . "\n";
-// }
+    // Convert to lowercase and remove special characters
+    $cleanType = strtolower(trim(preg_replace('/[^a-z]/', '', $fileType)) ?: 'config');
+
+    // Define all possible mappings
+    $typeMappings = [
+        'main' => 'main',
+        'http' => 'http',
+        'server' => 'server',
+        'location' => 'location',
+        'upstream' => 'upstream',
+        'include' => 'include',
+        'snippet' => 'snippet',
+        'conf' => 'config',
+        'config' => 'config',
+        // Add any other mappings you encounter
+    ];
+
+    // Check direct matches first
+    if (isset($typeMappings[$cleanType])) {
+        return $typeMappings[$cleanType];
+    }
+
+    // Check partial matches (e.g., 'serverconfig' contains 'server')
+    foreach ($typeMappings as $key => $value) {
+        if (strpos($cleanType, $key) !== false) {
+            return $value;
+        }
+    }
+
+    // Default fallback
+    return 'config';
+}
+function importNginxConfig($jsonFile)
+{
+    $conn = getDbConnectionNginx();
+
+    // Read and validate JSON
+    $jsonData = file_get_contents($jsonFile);
+    if ($jsonData === false) {
+        throw new Exception("Failed to read JSON file");
+    }
+
+    $data = json_decode($jsonData, true, 512, JSON_THROW_ON_ERROR);
+    if ($data === null) {
+        throw new Exception("Failed to decode JSON data");
+    }
+
+    // Begin transaction
+    $conn->beginTransaction();
+
+    try {
+        // Insert scan record
+        $scanStmt = $conn->prepare("
+            INSERT INTO nginx_scans (
+                scan_date, scan_path, total_files, total_servers, 
+                total_certificates, scan_status, notes
+            ) VALUES (
+                :scan_date, :scan_path, :total_files, :total_servers, 
+                :total_certificates, :scan_status, :notes
+            )
+        ");
+        $scanStmt->execute([
+            ':scan_date' => convertDateTime($data['scan']['scan_date']),
+            ':scan_path' => $data['scan']['scan_path'],
+            ':total_files' => $data['scan']['total_files'] ?? 0,
+            ':total_servers' => $data['scan']['total_servers'] ?? 0,
+            ':total_certificates' => $data['scan']['total_certificates'] ?? 0,
+            ':scan_status' => $data['scan']['scan_status'] ?? 'completed',
+            ':notes' => 'Automated import from scan'
+        ]);
+        $scanId = $conn->lastInsertId();
+
+        // Insert SSL certificates
+        $certMap = [];
+        foreach ($data['ssl_certificates'] ?? [] as $certData) {
+            $certStmt = $conn->prepare("
+                INSERT INTO ssl_certificates (
+                    certificate_name, certificate_path, private_key_path, 
+                    issuer, subject, fingerprint_sha1, scan_id
+                ) VALUES (
+                    :certificate_name, :certificate_path, :private_key_path, 
+                    :issuer, :subject, SUBSTRING(:fingerprint_sha1, 1, 40), :scan_id
+                )
+            ");
+            $certStmt->execute([
+                ':certificate_name' => substr($certData['certificate_name'] ?? basename($certData['certificate_path'] ?? 'unknown'), 0, 255),
+                ':certificate_path' => substr($certData['certificate_path'] ?? '', 0, 500),
+                ':private_key_path' => isset($certData['private_key_path']) ? substr($certData['private_key_path'], 0, 500) : null,
+                ':issuer' => isset($certData['issuer']) ? substr($certData['issuer'], 0, 255) : null,
+                ':subject' => isset($certData['subject']) ? substr($certData['subject'], 0, 255) : null,
+                ':fingerprint_sha1' => $certData['fingerprint_sha1'] ?? '',
+                ':scan_id' => $scanId
+            ]);
+            $certId = $conn->lastInsertId();
+            $certMap[$certData['certificate_path'] ?? ''] = $certId;
+        }
+
+        // Insert config files with strict type checking
+        $fileMap = [];
+        foreach ($data['config_files'] ?? [] as $fileData) {
+            $normalizedType = normalizeFileType($fileData['file_type'] ?? 'config');
+
+            $fileStmt = $conn->prepare("
+                INSERT INTO nginx_config_files (
+                    file_path, original_path, filename, file_size, file_hash, 
+                    file_content, file_type, is_enabled, is_symlink, 
+                    syntax_valid, syntax_errors, last_modified, scan_id
+                ) VALUES (
+                    :file_path, :original_path, :filename, :file_size, :file_hash, 
+                    :file_content, :file_type, :is_enabled, :is_symlink, 
+                    :syntax_valid, :syntax_errors, :last_modified, :scan_id
+                )
+            ");
+            $fileStmt->execute([
+                ':file_path' => substr($fileData['file_path'], 0, 500),
+                ':original_path' => substr($fileData['original_path'] ?? $fileData['file_path'], 0, 500),
+                ':filename' => substr($fileData['filename'], 0, 255),
+                ':file_size' => $fileData['file_size'] ?? 0,
+                ':file_hash' => substr($fileData['file_hash'] ?? '', 0, 64),
+                ':file_content' => $fileData['file_content'] ?? '',
+                ':file_type' => $normalizedType,
+                ':is_enabled' => $fileData['is_enabled'] ?? true ? 1 : 0,
+                ':is_symlink' => $fileData['is_symlink'] ?? false ? 1 : 0,
+                ':syntax_valid' => $fileData['syntax_valid'] === null ? null : ($fileData['syntax_valid'] ?? false ? 1 : 0),
+                ':syntax_errors' => isset($fileData['syntax_errors']) ? substr($fileData['syntax_errors'], 0, 65535) : null,
+                ':last_modified' => convertDateTime($fileData['last_modified']),
+                ':scan_id' => $scanId
+            ]);
+            $fileId = $conn->lastInsertId();
+            $fileMap[$fileData['file_path']] = $fileId;
+
+            // Insert servers
+            foreach ($fileData['servers'] ?? [] as $serverData) {
+                $serverStmt = $conn->prepare("
+                    INSERT INTO nginx_servers (
+                        config_file_id, server_name, listen_ports, 
+                        is_default_server, is_ssl_enabled, root_directory, is_active
+                    ) VALUES (
+                        :config_file_id, :server_name, :listen_ports, 
+                        :is_default_server, :is_ssl_enabled, :root_directory, :is_active
+                    )
+                ");
+                $serverStmt->execute([
+                    ':config_file_id' => $fileId,
+                    ':server_name' => isset($serverData['server_name']) ? substr($serverData['server_name'], 0, 255) : '',
+                    ':listen_ports' => isset($serverData['listen_ports']) ? substr($serverData['listen_ports'], 0, 255) : '',
+                    ':is_default_server' => strpos($serverData['listen_ports'] ?? '', 'default_server') !== false ? 1 : 0,
+                    ':is_ssl_enabled' => !empty($serverData['ssl_certificate']) ? 1 : 0,
+                    ':root_directory' => isset($serverData['root_directory']) ? substr($serverData['root_directory'], 0, 500) : null,
+                    ':is_active' => 1
+                ]);
+                $serverId = $conn->lastInsertId();
+
+                // Insert SSL certificate mapping if exists
+                if (!empty($serverData['ssl_certificate']) && isset($certMap[$serverData['ssl_certificate']])) {
+                    $sslCertStmt = $conn->prepare("
+                        INSERT INTO nginx_ssl_certificates (
+                            server_id, certificate_id, ssl_certificate_directive, 
+                            ssl_certificate_key_directive
+                        ) VALUES (
+                            :server_id, :certificate_id, :ssl_certificate_directive, 
+                            :ssl_certificate_key_directive
+                        )
+                    ");
+                    $sslCertStmt->execute([
+                        ':server_id' => $serverId,
+                        ':certificate_id' => $certMap[$serverData['ssl_certificate']],
+                        ':ssl_certificate_directive' => isset($serverData['ssl_certificate']) ? substr($serverData['ssl_certificate'], 0, 500) : null,
+                        ':ssl_certificate_key_directive' => isset($serverData['ssl_certificate_key']) ? substr($serverData['ssl_certificate_key'], 0, 500) : null
+                    ]);
+                }
+            }
+        }
+
+        // Commit transaction
+        $conn->commit();
+        return [
+            'success' => true,
+            'scan_id' => $scanId,
+            'message' => "Import completed successfully. Scan ID: $scanId"
+        ];
+
+    } catch (PDOException $e) {
+        // Roll back on error
+        $conn->rollBack();
+        return [
+            'success' => false,
+            'error' => "Database error: " . $e->getMessage(),
+            'code' => $e->getCode(),
+            'trace' => $e->getTraceAsString()
+        ];
+    } catch (Exception $e) {
+        // Roll back on error
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        return [
+            'success' => false,
+            'error' => "Error: " . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ];
+    }
+}
+
+// CLI execution
+if (php_sapi_name() === 'cli' && isset($argv)) {
+    if ($argc < 2) {
+        echo "Usage: php " . basename($argv[0]) . " <path_to_json_file>\n";
+        exit(1);
+    }
+
+    $jsonFile = $argv[1];
+    if (!file_exists($jsonFile)) {
+        echo "Error: JSON file not found: $jsonFile\n";
+        exit(1);
+    }
+
+    $result = importNginxConfig($jsonFile);
+
+    if ($result['success']) {
+        echo $result['message'] . "\n";
+        exit(0);
+    } else {
+        echo "ERROR: " . $result['error'] . "\n";
+        if (isset($result['trace']) && strpos($result['error'], 'Data truncated') !== false) {
+            echo "\nDEBUG INFO:\n" . $result['trace'] . "\n";
+        }
+        exit(1);
+    }
+}

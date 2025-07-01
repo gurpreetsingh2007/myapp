@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { useAuthStore } from '@/stores/site/login/auth'
+import { useAuthStore } from '@/stores/auth.ts'
 import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 import Sidebar from '@/components/sidebar.vue'
 import { onMounted, onBeforeUnmount } from 'vue'
-import { useSidebarStore } from '@/stores/site/sidebar/sidebar'
+import { useSidebarStore } from '@/stores/sidebar'
 import Titlebar from './components/titlebar.vue'
 const sidebarState = useSidebarStore()
 const { isOpen } = storeToRefs(sidebarState)

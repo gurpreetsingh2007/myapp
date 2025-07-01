@@ -7,7 +7,7 @@ import App from './App.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { routes } from 'vue-router/auto-routes'
 import { API } from '@/config/index'
-import { useAuthStore } from '@/stores/site/login/auth' // Use the correct path for highlight.js
+import { useAuthStore } from '@/stores/auth.ts' // Use the correct path for highlight.js
 
 const app = createApp(App)
 const router = createRouter({
@@ -17,11 +17,11 @@ const router = createRouter({
 
 for (const route of router.getRoutes()) {
   // Check if the route path starts with '/dashboard/'
-  if (route.path !== '/' && route.path !== '[..catchAll]') {
+  if (route.path.startsWith('/dashboard')) {
     //route.meta.requiresAuth = true
   }
 }
-
+/*
 router.beforeEach(async (to, from, next) => {
   //console.log('Route guard triggered')
 
@@ -52,8 +52,8 @@ router.beforeEach(async (to, from, next) => {
 
     const data = await res.json()
 
-    if (data.success) {
-      //
+    if (true) {
+      //data.success
       //should be data.success
       //console.log('Token valid')
       next()
@@ -67,7 +67,7 @@ router.beforeEach(async (to, from, next) => {
     return to.path === '/' ? next(false) : next('/')
   }
 })
-
+*/
 
 app.use(createPinia())
 app.use(router)
