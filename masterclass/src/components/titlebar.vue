@@ -105,10 +105,9 @@ onUnmounted(() => {
 <template>
   <header
     class="titlebar relative z-40 flex flex-col border-b border-slate-200 bg-white/90 backdrop-blur-sm shadow-lg transition-all duration-300 ease-in-out"
-    :class="{ 'pl-[260px]': isOpen, 'pl-[80px]': !isOpen }"
   >
     <!-- Top Row: Title & Actions -->
-    <div class="flex w-full items-center justify-between px-6 py-2.5">
+    <div class="flex w-full items-center justify-between px-6 ">
       <!-- Left: Title & Breadcrumbs -->
       <div class="flex flex-col max-w-[60%] sm:max-w-[70%] truncate">
         <h1
@@ -313,20 +312,20 @@ onUnmounted(() => {
             <div class="py-2">
               <RouterLink
                 to="/site/profile"
-                class="block px-4 py-2 text-sm text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
+                class="block px-4 py-2 text-md text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
               >
                 Profile
               </RouterLink>
               <RouterLink
                 to="/site/settings"
-                class="block px-4 py-2 text-sm text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
+                class="block px-4 py-2 text-md text-slate-700 hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 transition-colors"
               >
                 Settings
               </RouterLink>
-              <div class="border-t border-slate-200 my-1"></div>
+              <div class="block border-t border-slate-200 my-1 "></div>
               <button
                 @click="logout"
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                class="w-full text-left px-4 py-2 text-lg text-red-600 hover:bg-red-50 transition-colors"
               >
                 Sign out
               </button>

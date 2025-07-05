@@ -24,7 +24,7 @@
           :class="{ 'animate-shake': loginError }"
         >
           <h2
-            class="text-4xl xl:text-5xl mb-16 font-bold bg-gradient-to-r from-[#005188] to-[#007C52] bg-clip-text text-transparent"
+            class="text-4xl xl:text-5xl mb-8 font-bold bg-gradient-to-r from-[#005188] to-[#007C52] bg-clip-text text-transparent"
           >
             Secure Access
           </h2>
@@ -53,7 +53,7 @@
               <div class="group">
                 <label
                   for="password"
-                  class="block text-lg xl:text-xl font-medium text-[#007C52] mb-3"
+                  class="block text-lg xl:text-xl mt-4 font-medium text-[#007C52] mb-3"
                   >Password</label
                 >
                 <input
@@ -81,7 +81,7 @@
             <button
               type="submit"
               id="login-btn"
-              class="w-full py-4 text-xl xl:text-2xl font-bold tracking-wider bg-gradient-to-r from-[#005188] to-[#007C52] text-white rounded-xl transition-all hover:shadow-[0_5px_20px_-5px_rgba(0,81,136,0.3)] hover:scale-[1.02] active:scale-100"
+              class="w-full py-4 text-xl xl:text-2xl mt-10 font-bold tracking-wider bg-gradient-to-r from-[#005188] to-[#007C52] text-white rounded-xl transition-all hover:shadow-[0_5px_20px_-5px_rgba(0,81,136,0.3)] hover:scale-[1.02] active:scale-100"
               v-on:click="handleLogin"
             >
               AUTHENTICATE

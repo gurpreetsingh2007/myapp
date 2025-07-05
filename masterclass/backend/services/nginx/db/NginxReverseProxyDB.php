@@ -389,10 +389,25 @@ class NginxReverseProxyDB
 
     public function getLocation($locationId)
     {
+        // Get basic location info
         $sql = "SELECT * FROM locations WHERE location_id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$locationId]);
-        return $stmt->fetch();
+        $location = $stmt->fetch();
+
+        if (!$location) {
+            return null;
+        }
+
+        // Get parameters for this location
+        $sql = "SELECT p.* FROM params p
+            JOIN location_params lp ON p.param_id = lp.param_id
+            WHERE lp.location_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$locationId]);
+        $location['parameters'] = $stmt->fetchAll();
+
+        return $location;
     }
 
     public function updateLocation($locationId, array $data)
@@ -476,11 +491,11 @@ class NginxReverseProxyDB
      */
     public function getServerLocations($serverId)
     {
-        $sql = "SELECT l.*, sl. 
-                FROM server_locations sl
-                JOIN locations l ON sl.location_id = l.location_id
-                WHERE sl.server_id = ?
-                ORDER BY sl.";
+        $sql = "SELECT l.*, sl.location_order 
+            FROM server_locations sl
+            JOIN locations l ON sl.location_id = l.location_id
+            WHERE sl.server_id = ?
+            ORDER BY sl.location_order";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$serverId]);
         return $stmt->fetchAll();
@@ -577,17 +592,17 @@ class NginxReverseProxyDB
     }
 
     // Parameter operations
-    public function addParameter($name, $value, $description = '', $isCommon = true)
+    public function addParameter($name, $value, $description = '', $isCommon)
     {
         $sql = "INSERT INTO params (param_name, param_value, description, is_common) 
-                    VALUES (:name, :value, :description, :isCommon)";
+                    VALUES (:param_name, :param_value, :description, :is_common)";
 
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            'name' => trim((string)$name),
-            'value' =>  $value,
+            'param_name' => trim((string)$name),
+            'param_value' =>  $value,
             'description' => $description,
-            'isCommon' => (int) $isCommon
+            'is_common' => (int) $isCommon
         ]);
     }
 
@@ -930,5 +945,113 @@ class NginxReverseProxyDB
         } catch (Exception $e) {
             return $dateString; // Return original if parsing fails
         }
+    }
+
+    public function removeParameterFromServer($serverId, $paramId)
+    {
+        $sql = "DELETE FROM server_params 
+            WHERE server_id = :serverId AND param_id = :paramId";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':serverId' => $serverId,
+            ':paramId' => $paramId
+        ]);
+    }
+
+    public function removeParameterFromLocation($locationId, $paramId)
+    {
+        $sql = "DELETE FROM location_params 
+            WHERE location_id = :locationId AND param_id = :paramId";
+
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            ':locationId' => $locationId,
+            ':paramId' => $paramId
+        ]);
+    }
+    /**
+     * Update a parameter by its ID
+     * 
+     * @param int $paramId The ID of the parameter to update
+     * @param array $data Associative array with fields to update (param_name, param_value, description, is_common)
+     * @return bool Whether the update was successful
+     */
+    /**
+     * Update a parameter in the 'params' table by its ID using structured input.
+     *
+     * @param array $data Associative array with keys:
+     *                    - param_id (required)
+     *                    - param_name
+     *                    - param_value
+     *                    - description
+     *                    - is_common
+     * @return array Returns an associative array with status and optional messages.
+     */
+    public function updateParameterById($data)
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if (empty($data['param_id'])) {
+            return ['success' => false, 'message' => 'param_id is required'];
+        }
+
+        $paramId = (int) $data['param_id'];
+        $currentData = $this->getParameterById($paramId);
+        if (!$currentData) {
+            return ['success' => false, 'message' => "Parameter with ID $paramId not found"];
+        }
+
+        $allowed = ['param_name', 'param_value', 'description', 'is_common'];
+        $updates = [];
+        $params = [':paramId' => $paramId];
+
+        foreach ($allowed as $key) {
+            if (array_key_exists($key, $data)) {
+                $updates[] = "$key = :$key";
+                $params[":$key"] = ($key === 'is_common') ? (int) (bool) $data[$key] : $data[$key];
+            }
+        }
+
+        if (empty($updates)) {
+            return ['success' => false, 'message' => 'No valid fields provided for update'];
+        }
+
+        $sql = "UPDATE params SET " . implode(', ', $updates) . " WHERE param_id = :paramId";
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->execute($params);
+
+        if ($result) {
+            $newData = $this->getParameterById($paramId);
+            $this->logChange(
+                'params',
+                $paramId,
+                'UPDATE',
+                $currentData,
+                $newData,
+                $_SESSION['username'] ?? 'system',
+                $data['change_reason'] ?? 'Parameter updated'
+            );
+            return ['success' => true, 'message' => 'Parameter updated successfully'];
+        }
+
+        return ['success' => false, 'message' => 'Database update failed'];
+    }
+
+
+    /**
+     * Get a parameter by its ID
+     * 
+     * @param int $paramId The ID of the parameter to retrieve
+     * @return array|null The parameter data or null if not found
+     */
+    public function getParameterById($paramId)
+    {
+        $sql = "SELECT * FROM params WHERE param_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$paramId]);
+        return $stmt->fetch() ?: null;
     }
 }

@@ -298,6 +298,42 @@ try {
         }
     }
 
+    // POST /nginx/parameters/bulk-update - Update multiple parameters in bulk
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $cleanEndpoint === "/nginx/parameters/bulk-update") {
+        try {
+            // Get and validate input
+            $input = getJsonInput();
+
+            if (!isset($input['data']) || !is_array($input['data'])) {
+                throw new Exception("Invalid inputsddf format. Expected 'data' array");
+            }
+
+            // Process the bulk update
+            $result = $loader->updateParametersBulk($input);
+
+            if ($result['success']) {
+                sendJsonResponse([
+                    'success' => true,
+                    'data' => $result,
+                    'message' => "Updated {$result['success_count']} of {$result['total']} parameters"
+                ]);
+            } else {
+                sendJsonResponse([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+
+        } catch (Exception $e) {
+            sendJsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    
+
     // ============================================
     // get history
     // ============================================

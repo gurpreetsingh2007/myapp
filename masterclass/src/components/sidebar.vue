@@ -105,8 +105,8 @@ const toggleSidebar = () => {
     <button
       @click="toggleSidebar"
       id="togleswitch"
-      class="sidebar-toggle fixed top-4 z-[9999] p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200 text-[#005188] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white hover:-translate-y-0.5 hover:scale-110 shadow-lg hover:shadow-xl hover:shadow-[#005188]/20"
-      :class="isOpen ? 'left-55' : 'left-7'"
+      class="sidebar-toggle fixed z-[9999] top-1.5 p-2 rounded-xl bg-white/90 backdrop-blur-sm border border-slate-200 text-[#005188] transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-white hover:-translate-y-0.5 hover:scale-110 shadow-lg hover:shadow-xl hover:shadow-[#005188]/20"
+      :class="isOpen ? 'left-50' : 'left-5'"
     >
       <svg
         class="w-6 h-6 transform transition-transform duration-300"
@@ -155,7 +155,7 @@ const toggleSidebar = () => {
       </div>
 
       <!-- Navigation Menu -->
-      <nav class="sidebar-menu mt-6 relative">
+      <nav class="sidebar-menu mt-2 relative">
         <ul class="px-2 flex flex-col gap-2">
           <li
             v-for="(item, index) in menuItems"
@@ -163,7 +163,7 @@ const toggleSidebar = () => {
             class="group relative cursor-pointer transition-all duration-200"
           >
             <div
-              class="flex items-center rounded-xl px-4 py-4 transition-all duration-300 ease-out hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10 hover:translate-x-2 hover:shadow-lg hover:shadow-[#005188]/10"
+              class="flex items-center rounded-xl  transition-all duration-300 ease-out hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10    hover:shadow-lg hover:shadow-[#005188]/10"
               :class="[
                 item.active
                   ? 'bg-gradient-to-r from-[#005188]/15 to-[#007C52]/15 border-l-4 border-[#005188] shadow-md shadow-[#005188]/20'
@@ -181,7 +181,7 @@ const toggleSidebar = () => {
                 ]"
               />
               <Transition name="slide-fade">
-                <span v-if="isOpen" class="text-sm font-semibold text-slate-700">
+                <span v-if="isOpen" class="text-md font-semibold text-slate-700">
                   {{ item.title }}
                 </span>
               </Transition>
@@ -216,7 +216,7 @@ const toggleSidebar = () => {
                 <li
                   v-for="(child, cIndex) in item.children"
                   :key="cIndex"
-                  class="flex items-center rounded-lg transition-all group origin-left"
+                  class="flex items-center rounded-lg transition-all group origin-left hover:bg-gradient-to-r hover:from-[#005188]/10 hover:to-[#007C52]/10    hover:shadow-lg hover:shadow-[#005188]/10"
                   :class="{
                     'px-3 py-2.5': isOpen,
                     'px-2 py-2 justify-center': !isOpen,
@@ -239,9 +239,9 @@ const toggleSidebar = () => {
                     <Transition name="slide-fade">
                       <span
                         v-if="isOpen"
-                        class="text-sm text-slate-700 font-medium relative inline-block overflow-hidden"
+                        class="text-sm text-slate-700  font-medium relative inline-block overflow-hidden"
                       >
-                        <span class="inline-block">
+                        <span class="inline-block ">
                           {{ child.title }}
                           <span
                             class="absolute bottom-0 left-0 w-full h-px transition-all duration-500 origin-left"
@@ -435,13 +435,9 @@ const toggleSidebar = () => {
     transform: translateX(-100%);
   }
 
-  .sidebar-toggle {
-    left: 0.5rem !important;
-  }
 
-  .sidebar-toggle.left-55 {
-    left: 13.5rem !important;
-  }
+
+  
 }
 
 /* Light Theme Enhancements */

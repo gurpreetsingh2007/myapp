@@ -13,67 +13,26 @@ export const useBreadcrumbStore = defineStore('breadcrumb', () => {
     const paths = decodeURIComponent(route.path)
       .split('/')
       .filter((p) => p)
-    const crumbs = [{ name: 'SINGH', path: '/' }]
+    const crumbs = [{ name: 'COOPOLIS', path: '/' }]
 
     let buildPath = ''
     paths.forEach((path) => {
-      buildPath += `/${path}`
+      if (path === "services") {
+        buildPath += `/site`
+      }
+      else
+        buildPath += `/${path}`
       crumbs.push({
         name: capitalizePathSegment(path),
         path: buildPath,
       })
+      if (path === 'services') {
+        buildPath = buildPath.replace('/site', '/services')
+      }
+
     })
 
-    const block_id = route.query.block_id
-    const section_id = route.query.section_id
-      ? decodeURIComponent(typeof route.query.section_id === 'string' ? route.query.section_id : '')
-      : ''
-    const store_id = route.query.store_id
 
-    if (block_id) {
-      crumbs.push({
-        name: typeof block_id === 'string' ? capitalizePathSegment(block_id) : '',
-        path: '/dashboard/' + block_id,
-      })
-
-      if (section_id) {
-        const sectionPaths = section_id.split('/')
-        const sectionBuildPath = '/dashboard/' + block_id
-
-        // Process all but the last segment of section_id
-        for (let i = 1; i < sectionPaths.length - 1; i++) {
-          const segment = sectionPaths[i]
-          crumbs.push({
-            name: capitalizePathSegment(segment),
-            path: sectionBuildPath,
-          })
-        }
-
-        // Handle the last segment of section_id
-        if (sectionPaths.length > 0) {
-          const lastSegment = sectionPaths[sectionPaths.length - 1]
-          const lastPath = store_id
-            ? `/dashboard/config?block_id=${block_id}&section_id=${section_id}`
-            : sectionBuildPath + '/' + lastSegment
-
-          crumbs.push({
-            name: capitalizePathSegment(lastSegment),
-            path: lastPath,
-          })
-        }
-
-        // Add store_id breadcrumb if it exists
-        if (store_id) {
-          crumbs.push({
-            name:
-              typeof store_id === 'string'
-                ? capitalizePathSegment(store_id)
-                : '' + ' ID: ' + route.query.store_number,
-            path: `/dashboard/config?block_id=${block_id}&section_id=${section_id}&store_id=${store_id}&store_number=${route.query.store_number}`,
-          })
-        }
-      }
-    }
 
     return crumbs
   })

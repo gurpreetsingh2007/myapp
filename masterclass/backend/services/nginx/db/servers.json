@@ -21,20 +21,20 @@
           "proxy_pass": "             http://lxtest1.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -56,20 +56,20 @@
           "proxy_pass": "             http://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -91,20 +91,20 @@
           "proxy_pass": "             http://lxtest1.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -126,20 +126,20 @@
           "proxy_pass": "             http://lxmail.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -161,20 +161,20 @@
           "proxy_pass": "             https://lxdocker1.ads.coopolis.it:9010",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -196,20 +196,20 @@
           "proxy_pass": "             http://lxdocker1.ads.coopolis.it:8088",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -231,20 +231,20 @@
           "proxy_pass": "             http://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -261,8 +261,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://$host$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://$host$request_uri"
         }
       ],
       "locations": []
@@ -283,20 +283,20 @@
           "proxy_pass": "             http://mattia.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         },
@@ -305,20 +305,20 @@
           "proxy_pass": "             http://DESKTOP-SCE34P4.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         },
@@ -327,20 +327,20 @@
           "proxy_pass": "             http://esartoni23.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         },
@@ -349,20 +349,20 @@
           "proxy_pass": "             http://lxtest1.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -384,20 +384,20 @@
           "proxy_pass": "             https://lxtest2.ads.coopolis.it:8443",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -414,8 +414,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://hyper.coopalleanza3-0.it$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://hyper.coopalleanza3-0.it$request_uri"
         }
       ],
       "locations": []
@@ -431,8 +431,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://hyper.coopalleanza3-0.it$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://hyper.coopalleanza3-0.it$request_uri"
         }
       ],
       "locations": []
@@ -448,8 +448,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://fornitorihyper.coopalleanza3-0.it$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://fornitorihyper.coopalleanza3-0.it$request_uri"
         }
       ],
       "locations": []
@@ -465,8 +465,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://fornitorihyper.coopalleanza3-0.it$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://fornitorihyper.coopalleanza3-0.it$request_uri"
         }
       ],
       "locations": []
@@ -487,20 +487,20 @@
           "proxy_pass": "             http://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -522,20 +522,20 @@
           "proxy_pass": "             http://lxphp.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -557,20 +557,20 @@
           "proxy_pass": "             http://lxtalq.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -592,20 +592,20 @@
           "proxy_pass": "             http://lxponti.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -627,20 +627,20 @@
           "proxy_pass": "             http://lxtest2.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -662,20 +662,20 @@
           "proxy_pass": "             http://redmine.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -697,20 +697,20 @@
           "proxy_pass": "             http://lxtest1.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -732,20 +732,20 @@
           "proxy_pass": "             http://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -762,8 +762,8 @@
       "is_mtls": false,
       "directives": [
         {
-          "name": "return",
-          "value": "301 https://illuminazione.hyperlux.it$request_uri"
+          "param_name": "return",
+          "param_value": "301 https://illuminazione.hyperlux.it$request_uri"
         }
       ],
       "locations": []
@@ -784,20 +784,20 @@
           "proxy_pass": "             http://lxtest2.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -819,20 +819,20 @@
           "proxy_pass": "             http://172.16.0.3",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -854,20 +854,20 @@
           "proxy_pass": "             https://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }
@@ -889,20 +889,20 @@
           "proxy_pass": "             http://lxphp74.ads.coopolis.it",
           "directives": [
             {
-              "name": "proxy_set_header",
-              "value": "       Host $host"
+              "param_name": "proxy_set_header",
+              "param_value": "       Host $host"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Real-IP $remote_addr"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Real-IP $remote_addr"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-For $proxy_add_x_forwarded_for"
             },
             {
-              "name": "proxy_set_header",
-              "value": "       X-Forwarded-Proto $scheme"
+              "param_name": "proxy_set_header",
+              "param_value": "       X-Forwarded-Proto $scheme"
             }
           ]
         }

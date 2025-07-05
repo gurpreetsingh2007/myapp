@@ -1,208 +1,164 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <!-- Header and Add Certificate Button -->
-    <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">SSL/TLS Certificates</h1>
-      <button
-        @click="openAddModal"
-        class="bg-[#007C52] hover:bg-[#006044] text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-        </svg>
-        <span>Add Certificate</span>
-      </button>
-    </div>
+  <div class="h-full bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 flex flex-col overflow-hidden">
+    <AddCertificateModal v-if="showCertificateModal" @close="showCertificateModal = false" />
 
-    <!-- Loading State -->
-    <div v-if="nginxStore.certificatesLoading" class="bg-white rounded-xl shadow p-8 text-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#007C52] mx-auto mb-4"></div>
-      <p class="text-gray-600">Loading certificates...</p>
-    </div>
+    <div class="w-full mx-auto px-4 py-2 flex-1 flex flex-col min-h-0">
+      <!-- Action Bar -->
+      <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow border border-white/20 p-4 mb-6 flex-shrink-0">
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap gap-2 flex-1">
+            <button @click="addCertificate"
+              class="flex items-center px-4 py-2 bg-gradient-to-r from-[#007C52] to-[#009966] text-white font-medium rounded-lg hover:shadow-md transition-all hover:from-[#009966] hover:to-[#007C52]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Add Certificate
+            </button>
+          </div>
 
-    <!-- Error State -->
-    <div v-else-if="nginxStore.certificatesError" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
-      <div class="flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <div>
-          <h3 class="text-red-800 font-medium">Error loading certificates</h3>
-          <p class="text-red-600">{{ nginxStore.certificatesError }}</p>
+          <!-- Search Bar -->
+          <div class="flex flex-col sm:flex-row gap-2 flex-1 sm:max-w-md justify-end">
+            <div class="relative flex-1">
+              <div class="absolute inset-y-0 right-5 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input v-model="searchQuery" type="text" placeholder="Search certificates..."
+                class="w-full pl-5 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#007C52]/30 bg-white/90 transition-all" />
+            </div>
+
+            <button @click="refreshCertificates"
+              class="flex items-center justify-center px-4 py-2 bg-white/90 text-gray-700 font-medium rounded-lg shadow border border-gray-200 hover:border-[#007C52]/50 transition-all hover:bg-[#007C52]/5">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Certificate Table -->
-    <div v-else class="bg-white rounded-xl shadow overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Certificate</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issuer</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid From</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid To</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="cert in nginxStore.certificates as Certificate[]" :key="cert.cert_id" class="hover:bg-gray-50">
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#007C52]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ cert.cert_name }}</div>
-                    <div class="text-sm text-gray-500">{{ cert.subject || 'No subject information' }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ cert.issuer || 'Unknown' }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ formatDate(cert.valid_from) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900" :class="{'text-red-600': isExpiringSoon(cert.valid_to)}">
-                  {{ formatDate(cert.valid_to) }}
-                  <span v-if="isExpiringSoon(cert.valid_to)" class="ml-1 px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Expiring</span>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 text-xs rounded-full" :class="getStatusClass(cert.valid_to)">
-                  {{ getStatusText(cert.valid_to) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button @click="openEditModal(cert)" class="text-blue-600 hover:text-blue-900 mr-4">Edit</button>
-                <button @click="confirmDelete(cert.cert_id)" class="text-red-600 hover:text-red-900">Delete</button>
-              </td>
-            </tr>
-            <tr v-if="nginxStore.certificates.length === 0">
-              <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                No certificates found. Add your first certificate to get started.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Loading State -->
+      <div v-if="nginxStore.certificatesLoading" class="flex-1 flex items-center justify-center">
+        <div class="text-center space-y-4">
+          <div class="inline-flex items-center justify-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#007C52]/10 border-t-[#007C52]"></div>
+          </div>
+          <p class="text-gray-600">Loading certificates...</p>
+        </div>
       </div>
-    </div>
 
-    <!-- Add/Edit Certificate Modal -->
-    <div v-if="showCertificateModal" class="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
-        <div class="bg-gradient-to-r from-[#007C52] to-[#009966] p-6 flex justify-between items-center">
-          <h3 class="text-2xl font-bold text-white">{{ modalMode === 'add' ? 'Add SSL/TLS Certificate' : 'Edit Certificate' }}</h3>
-          <button @click="closeModal" class="text-white hover:text-gray-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      <!-- Error State -->
+      <div v-else-if="nginxStore.certificatesError" class="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6 flex-shrink-0">
+        <div class="flex items-start">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <div>
+            <p class="text-red-700 font-medium">Error loading certificates</p>
+            <p class="text-red-600 text-sm mt-1">{{ nginxStore.certificatesError }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div v-else class="flex-1 flex flex-col min-h-0">
+        <!-- No Data State -->
+        <div v-if="filteredCertificates.length === 0"
+          class="flex-1 flex flex-col items-center justify-center text-center space-y-4 p-8">
+          <div
+            class="w-16 h-16 bg-gradient-to-r from-[#007C52]/10 to-[#009966]/10 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
+          </div>
+          <p class="text-gray-600 font-medium">No certificates found</p>
+          <button @click="addCertificate"
+            class="flex items-center px-6 py-2 bg-gradient-to-r from-[#007C52] to-[#009966] text-white font-medium rounded-lg hover:shadow-md transition-all hover:from-[#009966] hover:to-[#007C52]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Your First Certificate
           </button>
         </div>
 
-        <div class="p-6 space-y-6">
-          <div class="space-y-4">
-            <div>
-              <label class="block text-gray-700 font-medium mb-2">Certificate Name</label>
-              <input
-                v-model="currentCert.cert_name"
-                type="text"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007C52] focus:border-transparent"
-                placeholder="My Certificate"
-              >
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-gray-700 font-medium mb-2">Certificate File (.crt/.pem)</label>
-                <div class="flex items-center justify-center w-full">
-                  <label class="flex flex-col w-full border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#007C52]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p v-if="!certFile" class="text-sm text-gray-500 mt-2">Click to upload certificate file</p>
-                      <p v-else class="text-sm text-[#007C52] font-medium mt-2">{{ certFile.name }}</p>
+        <!-- Certificate Table Container -->
+        <div v-else
+          class="flex-1 bg-white/80 backdrop-blur-sm rounded-xl shadow border border-white/20 overflow-hidden flex flex-col min-h-0">
+          <!-- Table Wrapper with proper scrolling -->
+          <div class="flex-1 overflow-auto">
+            <table class="w-full table-fixed">
+              <thead class="bg-white/95 backdrop-blur-sm sticky top-0 z-10 border-b border-gray-200">
+                <tr>
+                  <th class="w-64 px-4 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Certificate</th>
+                  <th class="w-64 px-4 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Issuer</th>
+                  <th class="w-48 px-4 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Valid From</th>
+                  <th class="w-48 px-4 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Valid To</th>
+                  <th class="w-32 px-4 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="w-32 px-4 py-3 text-right text-md font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white/50">
+                <tr v-for="cert in filteredCertificates" :key="cert.cert_id"
+                  :class="getRowColorClass(cert.valid_to)"
+                  class="transition-colors duration-150">
+                  <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="flex-shrink-0 h-6 w-6 bg-gradient-to-r from-[#007C52]/10 to-[#009966]/10 rounded-sm flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#007C52]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <div class="text-md font-medium text-gray-900 truncate" :title="cert.cert_name">
+                          {{ cert.cert_name }}
+                        </div>
+                        <div class="text-sm text-gray-500 truncate" :title="cert.subject || 'No subject information'">
+                          {{ cert.subject || 'No subject information' }}
+                        </div>
+                      </div>
                     </div>
-                    <input
-                      type="file"
-                      ref="certFileInput"
-                      class="hidden"
-                      accept=".crt,.pem"
-                      @change="handleCertFileChange"
-                    >
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label class="block text-gray-700 font-medium mb-2">Private Key (.key)</label>
-                <div class="flex items-center justify-center w-full">
-                  <label class="flex flex-col w-full border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div class="flex flex-col items-center justify-center pt-5 pb-6 px-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#007C52]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                      </svg>
-                      <p v-if="!keyFile" class="text-sm text-gray-500 mt-2">Click to upload private key</p>
-                      <p v-else class="text-sm text-[#007C52] font-medium mt-2">{{ keyFile.name }}</p>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-md text-gray-700 truncate" :title="cert.issuer || 'Unknown'">
+                      {{ cert.issuer || 'Unknown' }}
                     </div>
-                    <input
-                      type="file"
-                      ref="keyFileInput"
-                      class="hidden"
-                      accept=".key"
-                      @change="handleKeyFileChange"
-                    >
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-gray-700 font-medium mb-2">Notes</label>
-              <textarea
-                v-model="currentCert.notes"
-                rows="3"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007C52] focus:border-transparent"
-                placeholder="Any additional notes about this certificate"
-              ></textarea>
-            </div>
-
-            <div class="flex items-center space-x-4">
-              <div class="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_self_signed"
-                  v-model="currentCert.is_self_signed"
-                  class="w-4 h-4 text-[#007C52] bg-gray-100 border-gray-300 rounded focus:ring-[#007C52] focus:ring-2"
-                >
-                <label for="is_self_signed" class="ml-2 text-sm font-medium text-gray-700">Self-signed certificate</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal Actions -->
-          <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-            <button
-              @click="closeModal"
-              class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              @click="saveCertificate"
-              :disabled="saving"
-              class="px-6 py-3 bg-[#007C52] hover:bg-[#006044] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              <span v-if="saving" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-              <span>{{ saving ? 'Saving...' : (modalMode === 'add' ? 'Add Certificate' : 'Update Certificate') }}</span>
-            </button>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-md text-gray-700">
+                      {{ formatDate(cert.valid_from) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="text-md" :class="{'text-yellow-600': expiresInTwoMonths(cert.valid_to), 'text-red-600': isExpired(cert.valid_to)}">
+                      {{ formatDate(cert.valid_to) }}
+                      <span v-if="expiresInTwoMonths(cert.valid_to)" class="ml-1 px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-800">Expires Soon</span>
+                      <span v-if="isExpired(cert.valid_to)" class="ml-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800">Expired</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs rounded-full" :class="getStatusClass(cert.valid_to)">
+                      {{ getStatusText(cert.valid_to) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-right">
+                    <div class="flex justify-end space-x-2">
+                      <router-link
+                        :to="`/certificates/edit/${cert.cert_id}`"
+                        class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-[#007C52] to-[#009966] hover:from-[#009966] hover:to-[#007C52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#007C52]/50 transition-all"
+                      >
+                        Edit
+                      </router-link>
+                      <button @click="confirmDelete(cert.cert_id)" class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500/50 transition-all">
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -247,8 +203,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useNginxStore } from '@/stores/services/nginx/nginx'
+import { useRouter } from 'vue-router'
+import AddCertificateModal from '@/components/services/nginx/AddCertificateModal.vue';
 
 type Certificate = {
   cert_id: number
@@ -262,33 +220,39 @@ type Certificate = {
 }
 
 const nginxStore = useNginxStore()
-
-// Modal state
+const router = useRouter()
 const showCertificateModal = ref(false)
 const showDeleteModal = ref(false)
-const modalMode = ref<'add' | 'edit'>('add')
-const saving = ref(false)
 const deleting = ref(false)
 const certificateToDelete = ref<number | null>(null)
+const searchQuery = ref('')
 
-// Form data
-const currentCert = reactive<{
-  cert_id: number | null
-  cert_name: string
-  notes: string
-  is_self_signed: boolean
-}>({
-  cert_id: null,
-  cert_name: '',
-  notes: '',
-  is_self_signed: false
+// Filter certificates based on search query
+const filteredCertificates = computed(() => {
+  if (!searchQuery.value) return nginxStore.certificates
+
+  const query = searchQuery.value.toLowerCase().trim()
+  return nginxStore.certificates.filter(cert =>
+    cert.cert_name.toLowerCase().includes(query) ||
+    cert.algorithm.toLowerCase().includes(query) ||
+    (cert.valid_from && cert.valid_from.toLowerCase().includes(query)) ||
+    (cert.valid_to && cert.valid_to.toLowerCase().includes(query)) ||
+    (cert.subject && cert.subject.toLowerCase().includes(query)) ||
+    (cert.issuer && cert.issuer.toLowerCase().includes(query)))
 })
 
-// File uploads
-const certFile = ref<File | null>(null)
-const keyFile = ref<File | null>(null)
-const certFileInput = ref<HTMLInputElement | null>(null)
-const keyFileInput = ref<HTMLInputElement | null>(null)
+const addCertificate = () => {
+  showCertificateModal.value = true
+}
+
+// Refresh certificates
+const refreshCertificates = async () => {
+  try {
+    await nginxStore.fetchCertificates()
+  } catch (error) {
+    console.error('Failed to refresh certificates:', error)
+  }
+}
 
 // Load certificates on mount
 onMounted(async () => {
@@ -316,132 +280,54 @@ const formatDate = (dateString: string | undefined | null): string => {
   }
 }
 
-const isExpiringSoon = (validTo: string | undefined | null): boolean => {
+const isExpired = (validTo: string | undefined | null): boolean => {
   if (!validTo) return false
   const expiryDate = new Date(validTo)
-  const thirtyDaysFromNow = new Date()
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-  return expiryDate <= thirtyDaysFromNow && expiryDate >= new Date()
+  return expiryDate < new Date()
 }
+
+const expiresInTwoMonths = (validTo: string | undefined | null): boolean => {
+  if (!validTo) return false
+
+  const expiryDate = new Date(validTo)
+  const twoMonthsFromNow = new Date()
+  twoMonthsFromNow.setMonth(twoMonthsFromNow.getMonth() + 2)
+
+  return expiryDate <= twoMonthsFromNow && expiryDate >= new Date()
+}
+
+// Restituisce le classi CSS per la colorazione della riga
+const getRowColorClass = (validTo: string | undefined | null): string => {
+  if (!validTo) return 'hover:bg-gray-50';
+
+  if (isExpired(validTo)) {
+    return 'bg-red-50 hover:bg-red-100';
+  } else if (expiresInTwoMonths(validTo)) {
+    return 'bg-yellow-50 hover:bg-yellow-100';
+  }
+  return 'hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-emerald-50/50';
+};
 
 const getStatusClass = (validTo: string | undefined | null): string => {
   if (!validTo) return 'bg-gray-100 text-gray-800'
-  const expiryDate = new Date(validTo)
-  const now = new Date()
 
-  if (expiryDate < now) {
+  if (isExpired(validTo)) {
     return 'bg-red-100 text-red-800'
-  } else if (isExpiringSoon(validTo)) {
+  } else if (expiresInTwoMonths(validTo)) {
     return 'bg-yellow-100 text-yellow-800'
-  } else {
-    return 'bg-green-100 text-green-800'
   }
+  return 'bg-green-100 text-green-800'
 }
 
 const getStatusText = (validTo: string | undefined | null): string => {
   if (!validTo) return 'Unknown'
-  const expiryDate = new Date(validTo)
-  const now = new Date()
 
-  if (expiryDate < now) {
+  if (isExpired(validTo)) {
     return 'Expired'
-  } else if (isExpiringSoon(validTo)) {
-    return 'Expiring Soon'
-  } else {
-    return 'Valid'
+  } else if (expiresInTwoMonths(validTo)) {
+    return 'Expires Soon'
   }
-}
-
-// Modal functions
-const openAddModal = () => {
-  modalMode.value = 'add'
-  resetForm()
-  showCertificateModal.value = true
-}
-
-const openEditModal = (cert: any) => {
-  modalMode.value = 'edit'
-  currentCert.cert_id = cert.cert_id
-  currentCert.cert_name = cert.cert_name || ''
-  currentCert.notes = cert.notes || ''
-  currentCert.is_self_signed = cert.is_self_signed || false
-  showCertificateModal.value = true
-}
-
-const closeModal = () => {
-  showCertificateModal.value = false
-  resetForm()
-}
-
-const resetForm = () => {
-  currentCert.cert_id = null
-  currentCert.cert_name = ''
-  currentCert.notes = ''
-  currentCert.is_self_signed = false
-  certFile.value = null
-  keyFile.value = null
-  if (certFileInput.value) certFileInput.value.value = ''
-  if (keyFileInput.value) keyFileInput.value.value = ''
-}
-
-// File handling
-const handleCertFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files && target.files[0]
-  if (file) {
-    certFile.value = file
-  }
-}
-
-const handleKeyFileChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const file = target.files && target.files[0]
-  if (file) {
-    keyFile.value = file
-  }
-}
-
-// Save certificate
-const saveCertificate = async () => {
-  if (!currentCert.cert_name.trim()) {
-    alert('Certificate name is required')
-    return
-  }
-
-  if (modalMode.value === 'add' && !certFile.value) {
-    alert('Certificate file is required')
-    return
-  }
-
-  saving.value = true
-
-  try {
-    const formData = new FormData()
-    formData.append('cert_name', currentCert.cert_name)
-    formData.append('notes', currentCert.notes || '')
-    formData.append('is_self_signed', currentCert.is_self_signed ? '1' : '0')
-
-    if (certFile.value) {
-      formData.append('certificate', certFile.value)
-    }
-
-    if (keyFile.value) {
-      formData.append('private_key', keyFile.value)
-    }
-
-    if (modalMode.value === 'add') {
-      await nginxStore.addCertificate(formData)
-    } else {
-      await nginxStore.updateCertificate(currentCert.cert_id, formData)
-    }
-
-    closeModal()
-  } catch (error: any) {
-    console.error('Failed to save certificate:', error)
-    alert('Failed to save certificate: ' + (error?.message ?? error))
-  } finally {
-    saving.value = false
-  }
+  return 'Valid'
 }
 
 // Delete functions
@@ -462,6 +348,7 @@ const deleteCertificate = async () => {
 
   try {
     await nginxStore.deleteCertificate(certificateToDelete.value)
+    await nginxStore.fetchCertificates()
     showDeleteModal.value = false
     certificateToDelete.value = null
   } catch (error: any) {

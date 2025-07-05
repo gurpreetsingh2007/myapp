@@ -1,0 +1,379 @@
+{
+  "metadata": {
+    "generated_at": "2025-07-04T11:57:39Z",
+    "config_file": "/etc/nginx/sites-available/reverse_proxy",
+    "nginx_version": "1.22.1"
+  },
+  "servers": [
+    {
+      "server_name": "192.168.1.57 192.168.229.97 172.18.90.196 172.18.90.167",
+      "port": 443,
+      "ssl_enabled": true,
+      "ssl_certificate": "    /etc/nginx/ssl/myapp.local.pem",
+      "ssl_certificate_key": "/etc/nginx/ssl/myapp.local-key.pem",
+      "ssl_client_certificate": "",
+      "ssl_verify_client": "off",
+      "is_mtls": false,
+      "directives": [],
+      "locations": [
+        {
+          "path": "/",
+          "proxy_pass": "https://myapp.local",
+          "directives": [
+            {
+              "param_name": "if",
+              "param_value": "($request_method = OPTIONS) { add_header 'Access-Control-Allow-Origin' '*'"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS'"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Allow-Headers' 'Origin, Content-Type, Accept, Authorization'"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Max-Age' 3600"
+            },
+            {
+              "param_name": "return",
+              "param_value": "204"
+            },
+            {
+              "param_name": "proxy_ssl_verify",
+              "param_value": "off"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "Host myapp.local"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Real-IP $remote_addr"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Forwarded-For $proxy_add_x_forwarded_for"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Forwarded-Proto $scheme"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Allow-Origin' '*' always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "'Access-Control-Allow-Headers' 'Origin, Content-Type, Accept, Authorization' always"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "server_name": "myapp.local",
+      "port": 80,
+      "ssl_enabled": false,
+      "ssl_certificate": "",
+      "ssl_certificate_key": "",
+      "ssl_client_certificate": "",
+      "ssl_verify_client": "off",
+      "is_mtls": false,
+      "directives": [],
+      "locations": [
+        {
+          "path": "/",
+          "proxy_pass": "",
+          "directives": [
+            {
+              "param_name": "return",
+              "param_value": "301 https://$host$request_uri"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "server_name": "myapp.local",
+      "port": 443,
+      "ssl_enabled": true,
+      "ssl_certificate": "/etc/nginx/ssl/myapp.local.pem",
+      "ssl_certificate_key": "/etc/nginx/ssl/myapp.local-key.pem",
+      "ssl_client_certificate": "",
+      "ssl_verify_client": "off",
+      "is_mtls": false,
+      "directives": [
+        {
+          "param_name": "ssl_protocols",
+          "param_value": "TLSv1.2 TLSv1.3"
+        },
+        {
+          "param_name": "ssl_ciphers",
+          "param_value": "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+        },
+        {
+          "param_name": "ssl_prefer_server_ciphers",
+          "param_value": "on"
+        },
+        {
+          "param_name": "ssl_session_cache",
+          "param_value": "shared:SSL:10m"
+        },
+        {
+          "param_name": "ssl_session_timeout",
+          "param_value": "1d"
+        },
+        {
+          "param_name": "ssl_session_tickets",
+          "param_value": "off"
+        },
+        {
+          "param_name": "ssl_ecdh_curve",
+          "param_value": "secp384r1"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "X-Frame-Options DENY always"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "X-Content-Type-Options nosniff always"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "Referrer-Policy strict-origin always"
+        }
+      ],
+      "locations": [
+        {
+          "path": "/backend/",
+          "proxy_pass": "",
+          "directives": [
+            {
+              "param_name": "add_header",
+              "param_value": "X-Frame-Options DENY always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "X-Content-Type-Options nosniff always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Referrer-Policy strict-origin always"
+            },
+            {
+              "param_name": "if",
+              "param_value": "($http_origin ~* \"^https?://(localhost:4173|myapp\\.local)$\") { set $cors_origin $http_origin"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Origin $cors_origin always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Credentials true always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Headers 'Content-Type, Authorization, X-Requested-With' always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Methods 'GET, POST, OPTIONS, PUT, DELETE' always"
+            }
+          ],
+          "fastcgi_pass": "unix:/var/run/php/php-fpm.sock",
+          "fastcgi_index": "index.php",
+          "include": "/etc/nginx/fastcgi_params",
+          "fastcgi_params": [
+            {
+              "param_name": "fastcgi_param",
+              "param_value": "SCRIPT_FILENAME /mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/backend/index.php"
+            },
+            {
+              "param_name": "fastcgi_param",
+              "param_value": "PATH_INFO $fastcgi_path_info"
+            }
+          ],
+          "set_directives": [
+            {
+              "param_name": "set",
+              "param_value": "$cors_origin \"\""
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "proxy_pass": "",
+          "directives": [],
+          "try_files": "$uri $uri/ /index.html"
+        }
+      ],
+      "root": "/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/dist",
+      "index": "index.html"
+    },
+    {
+      "server_name": "myapp.local 172.18.90.167",
+      "port": 5173,
+      "ssl_enabled": true,
+      "ssl_certificate": "/etc/nginx/ssl/myapp.local_5173/server.crt",
+      "ssl_certificate_key": "/etc/nginx/ssl/myapp.local_5173/server.key",
+      "ssl_client_certificate": "/etc/nginx/ssl/myapp.local_5173/ca.crt",
+      "ssl_verify_client": "on",
+      "is_mtls": true,
+      "directives": [
+        {
+          "param_name": "ssl_protocols",
+          "param_value": "TLSv1.2 TLSv1.3"
+        },
+        {
+          "param_name": "ssl_ciphers",
+          "param_value": "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384"
+        },
+        {
+          "param_name": "ssl_prefer_server_ciphers",
+          "param_value": "on"
+        },
+        {
+          "param_name": "ssl_session_cache",
+          "param_value": "shared:SSL:10m"
+        },
+        {
+          "param_name": "ssl_session_timeout",
+          "param_value": "1d"
+        },
+        {
+          "param_name": "ssl_session_tickets",
+          "param_value": "off"
+        },
+        {
+          "param_name": "ssl_ecdh_curve",
+          "param_value": "secp384r1"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "X-Frame-Options DENY always"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "X-Content-Type-Options nosniff always"
+        },
+        {
+          "param_name": "add_header",
+          "param_value": "Referrer-Policy strict-origin always"
+        }
+      ],
+      "locations": [
+        {
+          "path": "/ws",
+          "proxy_pass": "http://127.0.0.1:8080",
+          "directives": [
+            {
+              "param_name": "proxy_http_version",
+              "param_value": "1.1"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "Upgrade $http_upgrade"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "Connection \"Upgrade\""
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "Host $host"
+            },
+            {
+              "param_name": "proxy_read_timeout",
+              "param_value": "3600s"
+            },
+            {
+              "param_name": "proxy_send_timeout",
+              "param_value": "3600s"
+            },
+            {
+              "param_name": "proxy_buffering",
+              "param_value": "off"
+            },
+            {
+              "param_name": "proxy_socket_keepalive",
+              "param_value": "on"
+            },
+            {
+              "param_name": "proxy_cache",
+              "param_value": "off"
+            }
+          ]
+        },
+        {
+          "path": "/backend/",
+          "proxy_pass": "http://127.0.0.1:8081/",
+          "directives": [
+            {
+              "param_name": "proxy_http_version",
+              "param_value": "1.1"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "Host $host"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Real-IP $remote_addr"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Forwarded-For $proxy_add_x_forwarded_for"
+            },
+            {
+              "param_name": "proxy_set_header",
+              "param_value": "X-Forwarded-Proto $scheme"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "X-Frame-Options DENY always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "X-Content-Type-Options nosniff always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Referrer-Policy strict-origin always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Origin https://myapp.local always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Credentials true always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Headers 'Content-Type, Authorization, X-Requested-With' always"
+            },
+            {
+              "param_name": "add_header",
+              "param_value": "Access-Control-Allow-Methods 'GET, POST, OPTIONS, PUT, DELETE' always"
+            }
+          ]
+        },
+        {
+          "path": "/",
+          "proxy_pass": "",
+          "directives": [],
+          "root": "/mnt/c/Users/gurpr/OneDrive/Desktop/myapp/masterclass/dist/backend/backend5173",
+          "try_files": "$uri $uri/ /index.html"
+        }
+      ]
+    }
+  ]
+}

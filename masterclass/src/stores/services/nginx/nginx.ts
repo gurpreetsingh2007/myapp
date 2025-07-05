@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { API } from '@/config'
 export interface Server {
+  cert_name?: string
   server_id: number
   server_title: string
   port: number
@@ -16,8 +17,17 @@ export interface Server {
   ssl_client_certificate?: string
   ssl_verify_client?: string
   is_websocket_enabled?: boolean
+  location?: number
 }
-
+export interface BulkUpdateResult {
+  successCount: number
+  errorCount: number
+  results: Array<{
+    param_id: number
+    status: 'success' | 'error'
+    message: string
+  }>
+}
 export interface Location {
   location_id?: number
   path: string
@@ -26,6 +36,8 @@ export interface Location {
 }
 
 export interface Certificate {
+  cert_name?: string
+  key_path?: string
   cert_id?: number
   cert_path: string
   cert_content: string
@@ -37,8 +49,8 @@ export interface Certificate {
 
 export interface Parameter {
   param_id?: number
-  name: string
-  value: string
+  param_name: string
+  param_value: string
   is_common?: boolean
 }
 
@@ -119,7 +131,8 @@ export const useNginxStore = defineStore('nginx', () => {
   // UI State
   const selectedServer = ref<Server | null>(null)
   const selectedCertificate = ref<Certificate | null>(null)
-
+  const parametersUpdating = ref(false) // New loading state for updates
+  const parametersUpdateError = ref<string | null>(null) // New error state for updates
   // =============================================
   // COMPUTED
   // =============================================
@@ -383,6 +396,47 @@ export const useNginxStore = defineStore('nginx', () => {
     }
   }
 
+
+
+  async function updateParametersBulk(paramsToUpdate: Parameter[]): Promise<BulkUpdateResult> {
+    parametersUpdating.value = true
+    parametersUpdateError.value = null
+
+    try {
+      const response = await apiCall<{
+        data: {
+          success_count: number
+          error_count: number
+          results: Array<{
+            param_id: number
+            status: 'success' | 'error'
+            message: string
+          }>
+        }
+      }>('/nginx/parameters/bulk-update', {
+        method: 'POST',
+        body: JSON.stringify({ data: paramsToUpdate }),
+      })
+
+      // If successful, refetch the parameters to keep store in sync
+      if (response.data.success_count > 0) {
+        await fetchParameters()
+      }
+
+      return {
+        successCount: response.data.success_count,
+        errorCount: response.data.error_count,
+        results: response.data.results,
+      }
+    } catch (error) {
+      parametersUpdateError.value = (error as Error).message
+      console.error('Failed to update parameters:', error)
+      throw error
+    } finally {
+      parametersUpdating.value = false
+    }
+  }
+
   async function addParameter(parameterData: Omit<Parameter, 'param_id'>): Promise<ApiResponse> {
     try {
       const response = await apiCall<ApiResponse>('/nginx/parameters', {
@@ -572,8 +626,6 @@ export const useNginxStore = defineStore('nginx', () => {
       }
     }
 
-
-
     return {
       isValid: errors.length === 0,
       errors,
@@ -616,6 +668,7 @@ export const useNginxStore = defineStore('nginx', () => {
     deleteServer,
     selectServer,
     clearSelectedServer,
+    updateParametersBulk,
 
     // Certificate Actions
     fetchCertificates,

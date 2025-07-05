@@ -75,46 +75,46 @@ parse_directive() {
         return
     fi
 
-    # Split directive into name and value
-    local name="${directive%% *}"
-    local value="${directive#* }"
+    # Split directive into param_name and param_value
+    local param_name="${directive%% *}"
+    local param_value="${directive#* }"
     
     # Skip empty directives
-    if [[ -z "$name" ]]; then
+    if [[ -z "$param_name" ]]; then
         return
     fi
 
     # Handle different contexts
     case "$context" in
         server)
-            case "$name" in
+            case "$param_name" in
                 server_name)
-                    current_server=$(echo "$current_server" | jq --arg name "$value" '.server_name = $name')
+                    current_server=$(echo "$current_server" | jq --arg param_name "$param_value" '.server_name = $param_name')
                     ;;
                 listen)
                     # Extract port and check for SSL
-                    if [[ "$value" =~ ([0-9]+) ]]; then
+                    if [[ "$param_value" =~ ([0-9]+) ]]; then
                         port="${BASH_REMATCH[1]}"
                         current_server=$(echo "$current_server" | jq --arg port "$port" '.port = ($port | tonumber)')
                     fi
-                    if [[ "$value" == *"ssl"* ]]; then
+                    if [[ "$param_value" == *"ssl"* ]]; then
                         current_server=$(echo "$current_server" | jq '.ssl_enabled = true')
                     else
                         current_server=$(echo "$current_server" | jq '.ssl_enabled = false')
                     fi
                     ;;
                 ssl_certificate)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.ssl_certificate = $value')
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.ssl_certificate = $param_value')
                     ;;
                 ssl_certificate_key)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.ssl_certificate_key = $value')
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.ssl_certificate_key = $param_value')
                     ;;
                 ssl_client_certificate)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.ssl_client_certificate = $value')
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.ssl_client_certificate = $param_value')
                     ;;
                 ssl_verify_client)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.ssl_verify_client = $value')
-                    if [[ "$value" != "off" ]]; then
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.ssl_verify_client = $param_value')
+                    if [[ "$param_value" != "off" ]]; then
                         current_server=$(echo "$current_server" | jq '.is_mtls = true')
                     else
                         current_server=$(echo "$current_server" | jq '.is_mtls = false')
@@ -122,84 +122,84 @@ parse_directive() {
                     ;;
                 add_header)
                     # Skip HSTS headers for now
-                    if [[ ! "$value" == "Strict-Transport-Security"* ]]; then
-                        current_server=$(echo "$current_server" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    if [[ ! "$param_value" == "Strict-Transport-Security"* ]]; then
+                        current_server=$(echo "$current_server" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     fi
                     ;;
                 return)
                     # Handle return directives (like in HTTP to HTTPS redirects)
-                    current_server=$(echo "$current_server" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    current_server=$(echo "$current_server" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
                 root)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.root = $value')
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.root = $param_value')
                     ;;
                 index)
-                    current_server=$(echo "$current_server" | jq --arg value "$value" '.index = $value')
+                    current_server=$(echo "$current_server" | jq --arg param_value "$param_value" '.index = $param_value')
                     ;;
                 *)
                     # Capture other server-level directives
-                    current_server=$(echo "$current_server" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    current_server=$(echo "$current_server" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
             esac
             ;;
         location)
-            case "$name" in
+            case "$param_name" in
                 proxy_pass)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.proxy_pass = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.proxy_pass = $param_value')
                     ;;
                 fastcgi_pass)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.fastcgi_pass = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.fastcgi_pass = $param_value')
                     ;;
                 if)
                     # Special handling for if blocks
-                    current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
                 add_header)
                     # Skip HSTS headers for now
-                    if [[ ! "$value" == "Strict-Transport-Security"* ]]; then
-                        current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    if [[ ! "$param_value" == "Strict-Transport-Security"* ]]; then
+                        current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     fi
                     ;;
                 return)
                     # Handle return directives
-                    current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
                 root)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.root = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.root = $param_value')
                     ;;
                 default_type)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.default_type = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.default_type = $param_value')
                     ;;
                 try_files)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.try_files = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.try_files = $param_value')
                     ;;
                 deny)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.deny = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.deny = $param_value')
                     ;;
                 include)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.include = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.include = $param_value')
                     ;;
                 fastcgi_param)
-                    current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.fastcgi_params += [{"name": $name, "value": $value}]')
+                    current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.fastcgi_params += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
                 fastcgi_index)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.fastcgi_index = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.fastcgi_index = $param_value')
                     ;;
                 fastcgi_split_path_info)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.fastcgi_split_path_info = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.fastcgi_split_path_info = $param_value')
                     ;;
                 fastcgi_read_timeout)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.fastcgi_read_timeout = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.fastcgi_read_timeout = $param_value')
                     ;;
                 access_log)
-                    current_location=$(echo "$current_location" | jq --arg value "$value" '.access_log = $value')
+                    current_location=$(echo "$current_location" | jq --arg param_value "$param_value" '.access_log = $param_value')
                     ;;
                 set)
-                    current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.set_directives += [{"name": $name, "value": $value}]')
+                    current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.set_directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
                 *)
                     # Capture all other location directives
-                    current_location=$(echo "$current_location" | jq --arg name "$name" --arg value "$value" '.directives += [{"name": $name, "value": $value}]')
+                    current_location=$(echo "$current_location" | jq --arg param_name "$param_name" --arg param_value "$param_value" '.directives += [{"param_name": $param_name, "param_value": $param_value}]')
                     ;;
             esac
             ;;
@@ -211,7 +211,7 @@ finalize_server() {
     if [ -n "$current_server" ]; then
         # Add server to JSON if it has locations or is a redirect
         local locations=$(echo "$current_server" | jq '.locations | length')
-        local has_redirect=$(echo "$current_server" | jq '.directives[] | select(.name == "return")' | jq -s 'length')
+        local has_redirect=$(echo "$current_server" | jq '.directives[] | select(.param_name == "return")' | jq -s 'length')
         local has_root=$(echo "$current_server" | jq '.root != ""')
         
         if [ "$locations" -gt 0 ] || [ "$has_redirect" -gt 0 ] || [ "$has_root" == "true" ]; then
@@ -228,7 +228,7 @@ finalize_location() {
         # Add location to server if it has proxy_pass, fastcgi_pass, or is a redirect
         local proxy_pass=$(echo "$current_location" | jq -r '.proxy_pass')
         local fastcgi_pass=$(echo "$current_location" | jq -r '.fastcgi_pass')
-        local has_redirect=$(echo "$current_location" | jq '.directives[] | select(.name == "return")' | jq -s 'length')
+        local has_redirect=$(echo "$current_location" | jq '.directives[] | select(.param_name == "return")' | jq -s 'length')
         local has_root=$(echo "$current_location" | jq '.root != ""')
         local has_deny=$(echo "$current_location" | jq '.deny != ""')
         
@@ -263,40 +263,6 @@ LOCATION_TEMPLATE=$(jq -n '{
     directives: []
 }')
 
-# Initialize server template
-#SERVER_TEMPLATE=$(jq -n '{
- #   server_name: "",
- #   port: 80,
- #   ssl_enabled: false,
- #   ssl_certificate: "",
- #   ssl_certificate_key: "",
- #   ssl_client_certificate: "",
-  #  ssl_verify_client: "off",
-  #  is_mtls: false,
-  #  root: "",
-  #  index: "",
-  #  directives: [],
-#    locations: []
-#}')
-
-# Initialize location template
-#LOCATION_TEMPLATE=$(jq -n '{
-   # path: "",
- #  proxy_pass: "",
-  #  fastcgi_pass: "",
-  #  root: "",
-  #  default_type: "",
-   # try_files: "",
-  #  deny: "",
-#    fastcgi_index: "",
-#    fastcgi_split_path_info: "",
-#    fastcgi_read_timeout: "",
-#    access_log: "",
-#  include: "",
-#    fastcgi_params: [],
-#    set_directives: [],
-#    directives: []
-#}')
 
 # Main parsing loop
 while IFS= read -r line || [ -n "$line" ]; do
@@ -328,7 +294,7 @@ while IFS= read -r line || [ -n "$line" ]; do
         # Handle server_name if provided on same line
         if [[ "$line_clean" =~ server_name[[:space:]]+(.*)[[:space:]]*\{ ]]; then
             current_server_name="${BASH_REMATCH[1]}"
-            current_server=$(echo "$current_server" | jq --arg name "$current_server_name" '.server_name = $name')
+            current_server=$(echo "$current_server" | jq --arg param_name "$current_server_name" '.server_name = $param_name')
         fi
         continue
     fi

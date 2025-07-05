@@ -119,7 +119,7 @@ const navigateTo = (path: string) => router.push(path)
 }
 
 .section-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 2px;
